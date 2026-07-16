@@ -43,6 +43,24 @@ AI 페르소나 기반 소개팅/매칭 서비스 **mildo**의 프론트엔드�
 
 ---
 
+## 스크린샷
+
+> 실기기(Android) 캡처 · 데이터는 테스트 계정, 타인 식별정보는 마스킹 처리.
+
+**⭐ 핵심 — 매칭 상대의 AI 페르소나와 대화**
+사용자의 12문항·MBTI로 만든 페르소나를 AI가 1인칭으로 연기해, 실제로 만나기 전에 대화로 상대를 미리 알아본다.
+
+<p align="center">
+  <img src="./docs/screenshots/01-ai-persona-chat.png" width="260" alt="AI 페르소나 대화"/>
+</p>
+
+| 홈 | 페르소나 리포트 | 마이페이지 | 친구 초대 |
+|:---:|:---:|:---:|:---:|
+| <img src="./docs/screenshots/02-home.png" width="170"/> | <img src="./docs/screenshots/03-persona-report.png" width="170"/> | <img src="./docs/screenshots/04-mypage.png" width="170"/> | <img src="./docs/screenshots/05-referral.png" width="170"/> |
+| AI 페르소나 카드 | AI 분석 리포트 | 프로필·재화(베리)·초대 | 친구 초대(리퍼럴) |
+
+---
+
 ## 하이라이트 — 설계 판단이 담긴 부분
 
 리뷰어가 코드로 바로 볼 수 있도록 [`code-excerpts/`](./code-excerpts)에 담았습니다.
