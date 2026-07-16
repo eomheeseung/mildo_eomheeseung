@@ -11,5 +11,7 @@
 | `apiClient.ts` | 401 자동 리프레시-재시도 인터셉터 + `{success,data,message}` 통일 envelope |
 | `analytics.ts` | 리퍼럴 deferred 딥링크 **이중 캡처**(AppsFlyer UDL + expo-linking 백업) |
 | `RevenueReportTab.tsx` | 관리자 대시보드 — graceful degradation, 표시 반올림 vs 서버 정밀계산 분리 |
+| `platformUtils.ts` | 크로스플랫폼 UX — OS 분기 다운로드 + 보안컨텍스트 클립보드 폴백 |
+| `ReferralScreen.tsx` | 화면 컴포넌트 — 병렬 조회·상태 렌더 + 네이티브/웹 공유 분기 |
 
 설계 배경은 [`../docs`](../docs)의 문서에 정리돼 있습니다.
