@@ -5,6 +5,27 @@ AI 페르소나 기반 소개팅/매칭 서비스 **mildo**의 백엔드입니�
 
 > 이 저장소는 **포트폴리오용 발췌본**입니다. 실서비스 코드에서 API 키·DB 접속정보·개인정보 등 민감 정보를 모두 제거하고, 제가 설계·구현을 주도한 대표 도메인의 코드와 설계 문서만 담았습니다.
 
+## 역할
+
+**백엔드 전 영역을 1인으로 담당** — 아키텍처 설계부터 도메인 구현, 외부 연동, 배포, 운영·장애 대응까지.
+DB 스키마 설계, 결제/재화 시스템, 본인인증·회원가입 게이트, AI 연동, 관리자 대시보드, 광고비 파이프라인을 직접 설계·구현하고, 운영 중 발생한 이슈를 로그·DB로 진단해 해결했습니다.
+
+## 서비스 규모 (실운영)
+
+> 채용 담당자 확인용으로 구체 수치를 채워주세요. 실서비스라는 신뢰를 주는 항목이라, 공개 가능한 범위에서 적으면 좋습니다.
+
+- 회원가입: 소셜(카카오·네이버·애플) + 이메일 + NICE 본인인증
+- 인앱결제(Apple·Google) + 재화(베리) 경제, 환불 자동 회수까지 운영
+- 광고비 파이프라인: Google Ads · TikTok 실연동 (일 배치 자동 수집)
+- *(누적 가입 수 / 결제 건수·매출 규모 / 월 광고비 등 — 공개 가능하면 여기에)*
+
+## 실제 서비스
+
+- App Store: *(mildo iOS 링크)*
+- Google Play: *(mildo Android 링크)*
+
+> 실제 스토어에 출시된 서비스입니다. 링크는 "돌아가는 서비스를 만들었다"는 가장 강한 증거라, 넣는 것을 권장합니다.
+
 ---
 
 ## 기술 스택
@@ -20,6 +41,13 @@ AI 페르소나 기반 소개팅/매칭 서비스 **mildo**의 백엔드입니�
 | 광고/추적 | Google Ads API, TikTok Marketing API, AppsFlyer S2S |
 | 알림 | FCM, Web Push(VAPID), SSE |
 | Infra | 단일 서버 배포(자체 스크립트), Docker(로컬 DB) |
+
+### 기술 선택 근거 (따라 한 게 아니라 판단한 것)
+
+- **Java 21 가상 스레드** — AI·결제·본인인증 등 **외부 I/O 대기가 많은** 요청 특성상, 스레드 풀 튜닝 없이 블로킹 코드 그대로 높은 동시성을 얻기 위해 채택. 리액티브의 복잡도 없이 명령형 코드를 유지.
+- **모놀리식** — 1인 개발·초기 서비스 규모에서 MSA의 운영 오버헤드는 과설계. 대신 **도메인 패키지 경계를 엄격히** 지켜 추후 분리가 쉽도록 설계.
+- **원장(ledger) 패턴** — 돈·재화는 잔액을 직접 수정하지 않고 **모든 증감을 거래로 기록**해, 정산·환불·감사를 거래의 재생으로 해결.
+- **결제 JWS 오프라인 검증** — 애플 서버 왕복 없이 서명만으로 검증해 지연·장애 의존을 줄이고, 검증 로직을 우리 서버가 통제.
 
 ---
 
@@ -51,18 +79,26 @@ AI 페르소나 기반 소개팅/매칭 서비스 **mildo**의 백엔드입니�
 
 ## 하이라이트 — 설계 판단이 담긴 부분
 
-리뷰어가 코드로 바로 볼 수 있도록 대표 4개를 [`code-excerpts/`](./code-excerpts)에 담았습니다.
+리뷰어가 코드로 바로 볼 수 있도록 대표 코드를 [`code-excerpts/`](./code-excerpts)에 담았습니다.
 
-### 1. 인앱 재화(베리) 원장 — 멱등성과 어뷰징 방지
-[`TokenLedgerService.java`](./code-excerpts/TokenLedgerService.java) · [`TokenRewardEventListener.java`](./code-excerpts/TokenRewardEventListener.java)
+### 1. 인앱 재화(베리) 원장 — 멱등성·동시성·어뷰징 방지
+[`TokenLedgerService.java`](./code-excerpts/TokenLedgerService.java) · [`TokenAccount.java`](./code-excerpts/TokenAccount.java) · [`TokenRewardEventListener.java`](./code-excerpts/TokenRewardEventListener.java)
 
 - **모든 적립/차감을 원장(ledger) 1행으로 기록** — 잔액은 파생값이 아니라 거래의 합으로 추적.
+- **동시 차감 이중차감 방지** — 잔액 계좌에 `@Version` 낙관적 락을 둬, 동시 요청이 같은 잔액을 두 번 깎지 못하게 함.
 - **1회성 보상의 멱등키를 `userId`가 아니라 `사람(본인인증 CI 해시)`으로 설계.** userId 기준이면 **탈퇴→재가입마다 새 userId가 생겨 가입 보너스가 재지급**되는 파밍이 뚫립니다. CI 해시를 멱등키로 쓰면 탈퇴로 원 계정 CI가 파기돼도 원장 행에 남아, 같은 사람이 재가입해도 `(type, refType, refId)` 유니크로 1회만 지급됩니다.
 - **무상 베리는 30일 만료 로트(grant) 단위로 FIFO 소진**, 유상/무상 혼합 차감 시 분해량을 영속화해 **환불 시 동일 비율로 복원**.
 
 > 처음엔 `existingUser == null`로 신규만 보너스를 주게 짰다가, redesign 플로우에서 쉘 유저가 미리 생성돼 **보너스가 한 번도 안 나가던 버그**를 실운영에서 발견 → 멱등 설계 덕에 "무조건 발행해도 사람당 1회"로 안전하게 고쳤습니다.
 
-### 2. 친구 초대(리퍼럴) — 3중 어뷰징 방지
+### 2. 인앱 결제 검증 — 오프라인 JWS + 플랫폼 격리
+[`ChargeReceiptVerifier.java`](./code-excerpts/ChargeReceiptVerifier.java) · [`AppleChargeReceiptVerifier.java`](./code-excerpts/AppleChargeReceiptVerifier.java)
+
+- **결제 검증 디스패처** — `platform`으로 플랫폼별 검증기에 위임. Apple 검증이 Google 변경과 무관하도록 **책임 격리**.
+- **Apple StoreKit2 JWS 오프라인 서명검증** — 영수증의 x5c 인증서 체인을 Apple Root CA까지 검증하고, 페이로드의 bundleId/environment를 확인. 애플 서버 왕복 없이 검증하며, JWS의 `environment` 필드로 샌드박스/운영 verifier를 라우팅(TestFlight·심사 결제는 샌드박스).
+- 검증 결과의 스토어 거래 ID를 **멱등키**로 넘겨, 원장의 중복 적립을 원천 차단.
+
+### 3. 친구 초대(리퍼럴) — 3중 어뷰징 방지
 [`ReferralService.java`](./code-excerpts/ReferralService.java)
 
 보상 한도가 **무제한**인 정책에서, 자기 초대·재가입 파밍을 막기 위해 3중 방어를 설계했습니다.
@@ -71,7 +107,7 @@ AI 페르소나 기반 소개팅/매칭 서비스 **mildo**의 백엔드입니�
 - 원장 멱등키를 **피초대자 CI 해시**로 잡음 (초대자는 무제한이라 초대자 CI로 잡으면 2번째부터 막힘 — 이 방향성이 핵심)
 - 초대 처리는 **가입 트랜잭션 커밋 후 별도 트랜잭션**에서 → 잘못된 `inviterId`가 회원가입 자체를 깨지 않음
 
-### 3. 광고비 대시보드 — 외부 API 연동 + 일 배치
+### 4. 광고비 대시보드 — 외부 API 연동 + 일 배치
 [`GoogleAdsClient.java`](./code-excerpts/GoogleAdsClient.java)
 
 Google Ads·TikTok 광고비를 매일 당겨와 베리 매출과 합쳐 **ROAS·순이익**을 집계합니다.
@@ -79,7 +115,12 @@ Google Ads·TikTok 광고비를 매일 당겨와 베리 매출과 합쳐 **ROAS�
 - `refresh_token → access_token` 교환 후 GAQL 질의
 - 저장 구조를 **처음부터 `날짜 × 플랫폼 × 지표`** 로 잡아 메타 등 확장에 대비, `(날짜,플랫폼)` 유니크로 **멱등 upsert** (지연 반영·정정분을 재조회로 덮어씀)
 
-### 4. AI 멀티 프로바이더 추상화
+### 5. 페르소나 궁합 계산 — 매칭/추천 도메인 규칙
+[`MbtiCompatibilityUtil.java`](./code-excerpts/MbtiCompatibilityUtil.java)
+
+- 탐색/추천의 핵심인 **페르소나 궁합 점수**를 규칙 테이블로 계산. 서비스의 도메인 지식이 코드로 응결된 부분.
+
+### 6. AI 멀티 프로바이더 추상화
 [`ClaudeClient.java`](./code-excerpts/ClaudeClient.java)
 
 - `AiClient` 인터페이스로 Claude/OpenAI를 교체 가능하게 추상화, 관리자에서 기능별 모델 지정.
@@ -112,6 +153,8 @@ Google Ads·TikTok 광고비를 매일 당겨와 베리 매출과 합쳐 **ROAS�
 ## 문서
 
 - [`docs/architecture.md`](./docs/architecture.md) — 시스템/도메인 구조
+- [`docs/data-model.md`](./docs/data-model.md) — 데이터 모델(ERD)
+- [`docs/flows.md`](./docs/flows.md) — 주요 플로우(결제·가입 시퀀스)
 - [`docs/berry-ledger.md`](./docs/berry-ledger.md) — 베리 원장 설계 상세
 - [`docs/ad-spend.md`](./docs/ad-spend.md) — 광고비 연동 설계
 - [`docs/troubleshooting.md`](./docs/troubleshooting.md) — 실운영 트러블슈팅
