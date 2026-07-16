@@ -19,7 +19,9 @@
 
 | 파일 | 무엇을 보나 |
 |---|---|
+| `NiceIdentityGuard.java` | NICE 본인인증 **1인 1계정** 가드 (CI 유니크 + 살아있는 계정 중복 거부 / 탈퇴 계정 승계) |
 | `ReferralService.java` | 친구 초대 — 3중 어뷰징 방지, 가입과 분리된 처리 |
+| `ExploreCandidateFilter.java` | 탐색 후보 필터 — 스킵/신고(양방향 차단)/기매칭/요청중 제외 |
 | `MbtiCompatibilityUtil.java` | 페르소나/MBTI 궁합 점수 계산 — 매칭·추천의 도메인 규칙 |
 
 ## 외부 연동

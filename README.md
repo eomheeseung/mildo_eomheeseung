@@ -134,10 +134,10 @@ Google Ads·TikTok 광고비를 매일 당겨와 베리 매출과 합쳐 **ROAS�
 ## 그 외 구현 범위
 
 - **회원가입 게이트** — 소셜(카카오/네이버/애플) + 이메일 + NICE 본인인증. 이메일 도메인 화이트리스트, 심사(App Store/Play) 계정 bypass.
-- **NICE 본인인증 1인 1계정** — 재인증 시 기존 계정 CI를 훔쳐가던 문제를, `users.ci` 유니크 + 살아있는 계정이 보유한 CI면 가입 거부로 차단.
-- **결제/환불** — Apple JWS 오프라인 검증, Google Play 실검증, 스토어 환불 웹훅/폴링으로 적립 회수(clawback).
+- **NICE 본인인증 1인 1계정** — 재인증 시 기존 계정 CI를 훔쳐가던 문제를, `users.ci` 유니크 + 살아있는 계정이 보유한 CI면 가입 거부로 차단. → [`NiceIdentityGuard.java`](./code-excerpts/NiceIdentityGuard.java)
+- **결제/환불** — Apple JWS 오프라인 검증, Google Play 실검증, 스토어 환불 웹훅/폴링으로 적립 회수(clawback). → [`TokenChargeService.java`](./code-excerpts/TokenChargeService.java)
 - **관리자 대시보드** — 유저/매칭/신고/분석(시계열·퍼널)·베리 매출·광고비.
-- **탐색/매칭** — AI 페르소나 4축 유사도 기반 추천, 신고 시 양방향 발견 차단.
+- **탐색/매칭** — AI 페르소나 4축 유사도 기반 추천, 신고 시 양방향 발견 차단. → [`ExploreCandidateFilter.java`](./code-excerpts/ExploreCandidateFilter.java)
 
 ---
 
