@@ -1,4 +1,4 @@
-package tideflo.tide_match.ai.client;
+package mildo.ai.client;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -8,13 +8,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.HttpStatusCodeException;
-import tideflo.tide_match.ai.client.AnthropicApi;
-import tideflo.tide_match.ai.service.AiUsageLogService;
-import tideflo.tide_match.ai.type.AiModel;
-import tideflo.tide_match.ai.type.AiPromptType;
-import tideflo.tide_match.ai.util.AiRetryUtils;
-import tideflo.tide_match.ex.CustomException;
-import tideflo.tide_match.ex.ErrorCode;
+import mildo.ai.client.AnthropicApi;
+import mildo.ai.service.AiUsageLogService;
+import mildo.ai.type.AiModel;
+import mildo.ai.type.AiPromptType;
+import mildo.ai.util.AiRetryUtils;
+import mildo.ex.CustomException;
+import mildo.ex.ErrorCode;
 
 import java.util.ArrayList;
 import java.util.HashMap;

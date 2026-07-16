@@ -1,4 +1,4 @@
-package tideflo.tide_match.token.event;
+package mildo.token.event;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -7,12 +7,12 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
-import tideflo.tide_match.auth.entity.User;
-import tideflo.tide_match.auth.repository.UserRepository;
-import tideflo.tide_match.token.entity.TokenGrantSource;
-import tideflo.tide_match.token.entity.TokenTransactionType;
-import tideflo.tide_match.token.service.TokenLedgerService;
-import tideflo.tide_match.token.util.CiHasher;
+import mildo.auth.entity.User;
+import mildo.auth.repository.UserRepository;
+import mildo.token.entity.TokenGrantSource;
+import mildo.token.entity.TokenTransactionType;
+import mildo.token.service.TokenLedgerService;
+import mildo.token.util.CiHasher;
 
 /**
  * 무상 베리 적립 이벤트 리스너.

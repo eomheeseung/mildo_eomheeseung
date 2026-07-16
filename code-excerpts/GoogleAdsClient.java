@@ -1,11 +1,11 @@
-package tideflo.tide_match.adspend.client;
+package mildo.adspend.client;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
-import tideflo.tide_match.adspend.config.AdsProperties;
-import tideflo.tide_match.common.SharedObjectMapper;
+import mildo.adspend.config.AdsProperties;
+import mildo.common.SharedObjectMapper;
 
 import java.math.BigDecimal;
 import java.net.URI;

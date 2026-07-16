@@ -1,4 +1,4 @@
-package tideflo.tide_match.token.util;
+package mildo.token.util;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;

@@ -1,24 +1,24 @@
-package tideflo.tide_match.referral.service;
+package mildo.referral.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
-import tideflo.tide_match.auth.entity.User;
-import tideflo.tide_match.auth.entity.UserStatus;
-import tideflo.tide_match.auth.repository.UserRepository;
-import tideflo.tide_match.ex.CustomException;
-import tideflo.tide_match.ex.ErrorCode;
-import tideflo.tide_match.referral.dto.ReferralHistoryResponse;
-import tideflo.tide_match.referral.dto.ReferralSummaryResponse;
-import tideflo.tide_match.referral.entity.Referral;
-import tideflo.tide_match.referral.repository.ReferralRepository;
-import tideflo.tide_match.token.entity.TokenGrantSource;
-import tideflo.tide_match.token.entity.TokenTransactionType;
-import tideflo.tide_match.referral.util.NicknameMasker;
-import tideflo.tide_match.token.service.TokenLedgerService;
-import tideflo.tide_match.token.util.CiHasher;
+import mildo.auth.entity.User;
+import mildo.auth.entity.UserStatus;
+import mildo.auth.repository.UserRepository;
+import mildo.ex.CustomException;
+import mildo.ex.ErrorCode;
+import mildo.referral.dto.ReferralHistoryResponse;
+import mildo.referral.dto.ReferralSummaryResponse;
+import mildo.referral.entity.Referral;
+import mildo.referral.repository.ReferralRepository;
+import mildo.token.entity.TokenGrantSource;
+import mildo.token.entity.TokenTransactionType;
+import mildo.referral.util.NicknameMasker;
+import mildo.token.service.TokenLedgerService;
+import mildo.token.util.CiHasher;
 
 import java.util.HashMap;
 import java.util.List;
@@ -38,7 +38,7 @@ import java.util.stream.Collectors;
  * </ul>
  * <b>본인인증(CI) 없는 계정은 보상 스킵</b> — 관계는 기록하되 rewarded=false. 무제한 정책의 안전판이다.</p>
  *
- * <p>보상 실패가 가입을 깨지 않도록 커밋 후 별도 트랜잭션에서 처리한다({@link tideflo.tide_match.referral.event.ReferralEventListener}).</p>
+ * <p>보상 실패가 가입을 깨지 않도록 커밋 후 별도 트랜잭션에서 처리한다({@link mildo.referral.event.ReferralEventListener}).</p>
  */
 @Slf4j
 @Service
