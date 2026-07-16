@@ -43,10 +43,13 @@ DB 스키마 설계, 결제/재화 시스템, 본인인증·회원가입 게이�
 
 ### 기술 선택 근거 (따라 한 게 아니라 판단한 것)
 
-- **Java 21 가상 스레드** — AI·결제·본인인증 등 **외부 I/O 대기가 많은** 요청 특성상, 스레드 풀 튜닝 없이 블로킹 코드 그대로 높은 동시성을 얻기 위해 채택. 리액티브의 복잡도 없이 명령형 코드를 유지.
+- **Java 21 가상 스레드** — AI·결제·본인인증 등 **외부 I/O 대기가 많은** 요청 특성상, 스레드 풀 튜닝 없이 블로킹 코드 그대로 높은 동시성을 얻기 위해 JDK 17→21로 올림. 리액티브의 복잡도 없이 명령형 코드를 유지.
+- **HTTP 클라이언트 3종 구분** — AI는 Spring 6 **HTTP Interface(`@HttpExchange`)** 로 선언적 호출, 광고·결제 검증 등 단발 조회는 **`java.net.http`**(SDK 없이), OAuth는 RestTemplate. 연동 성격에 맞춰 선택.
 - **모놀리식** — 1인 개발·초기 서비스 규모에서 MSA의 운영 오버헤드는 과설계. 대신 **도메인 패키지 경계를 엄격히** 지켜 추후 분리가 쉽도록 설계.
 - **원장(ledger) 패턴** — 돈·재화는 잔액을 직접 수정하지 않고 **모든 증감을 거래로 기록**해, 정산·환불·감사를 거래의 재생으로 해결.
-- **결제 JWS 오프라인 검증** — 애플 서버 왕복 없이 서명만으로 검증해 지연·장애 의존을 줄이고, 검증 로직을 우리 서버가 통제.
+- **트랜잭션 분리** — 가입 등 핵심은 커밋하고, 보상·이벤트는 `AFTER_COMMIT` + `REQUIRES_NEW`로 분리해 부가 로직 실패가 핵심을 롤백하지 않게 함.
+
+> 상세: [`docs/engineering-decisions.md`](./docs/engineering-decisions.md) — JDK 21 마이그레이션, HTTP 클라이언트 선택, 트랜잭션 전략, 코딩 정책(팀 컨벤션).
 
 ---
 
@@ -152,6 +155,7 @@ Google Ads·TikTok 광고비를 매일 당겨와 베리 매출과 합쳐 **ROAS�
 ## 문서
 
 - [`docs/architecture.md`](./docs/architecture.md) — 시스템/도메인 구조
+- [`docs/engineering-decisions.md`](./docs/engineering-decisions.md) — **왜 그렇게 했나** (JDK 21·HTTP·트랜잭션·코딩 정책)
 - [`docs/data-model.md`](./docs/data-model.md) — 데이터 모델(ERD)
 - [`docs/flows.md`](./docs/flows.md) — 주요 플로우(결제·가입 시퀀스)
 - [`docs/berry-ledger.md`](./docs/berry-ledger.md) — 베리 원장 설계 상세

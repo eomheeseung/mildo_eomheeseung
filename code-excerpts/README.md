@@ -11,6 +11,7 @@
 | `TokenAccount.java` | **`@Version` 낙관적 락** — 동시 차감 이중차감 방지 |
 | `ChargeReceiptVerifier.java` | 결제 검증 **디스패처** — platform으로 플랫폼별 검증기에 위임(격리) |
 | `AppleChargeReceiptVerifier.java` | Apple **StoreKit2 JWS 오프라인 서명검증** (x5c 체인 → Apple Root CA, 샌드박스/운영 라우팅) |
+| `TokenChargeService.java` | 충전 검증→적립 오케스트레이션 + **환불 회수(clawback)** — 이미 소진 시 잔액이 음수(빚)가 될 수 있음 |
 | `TokenRewardEventListener.java` | 가입 커밋 후 별도 트랜잭션 보상 + **CI 해시 멱등키**(재가입 파밍 차단) |
 | `CiHasher.java` | 사람 단위 멱등키를 위한 CI 해시 (개인정보 미저장) |
 
