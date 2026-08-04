@@ -76,6 +76,90 @@ spring:
 
 결과는 [`troubleshooting.md` 9번](./troubleshooting.md#9-동시-지급-하나가-조용히-사라지던-문제-) — 앱 기동 시 이벤트 보상과 출석 보상이 같은 계정 행을 동시에 갱신하다 한쪽이 409로 지고, 재시도가 없어 그 지급이 사라졌습니다. 한 유저는 **2시간 51분** 뒤에야 받았습니다.
 
+### 무슨 일이 벌어지는가 — 트랜잭션 생애주기로 보기
+
+이 사고의 핵심은 **"동시에 썼다"가 아니라 "읽은 뒤 남이 먼저 커밋했다"** 입니다. JPA의 쓰기 지연이 그 창을 벌립니다.
+
+**트랜잭션 배치.** 지급 한 건은 이렇게 구성돼 있습니다.
+
+```
+@Transactional  ping()
+├─ currentSlot()                    메모리 캐시 (DB 접근 없음)
+├─ findIdByEmail()                  SELECT
+├─ participation.insertIgnore()     INSERT (네이티브 → 이 시점에 flush 유발)
+├─ creditFree()  @Transactional     ← REQUIRED. 같은 트랜잭션에 합류
+│   ├─ 멱등 중복검사                SELECT
+│   ├─ getOrCreateAccount()         SELECT  ★ 여기서 version 을 손에 쥔다
+│   ├─ tokenGrant.save()            영속화만 — SQL 안 나감 (쓰기 지연)
+│   ├─ account.setFreeBalance(+n)   더티 마킹만 — UPDATE 안 나감 (쓰기 지연)
+│   └─ tokenTransaction.saveAndFlush()  ★ 여기서 비로소 flush
+│        → INSERT token_grant
+│        → UPDATE token_account SET free_balance=?, version=? WHERE id=? AND version=?
+│        → INSERT token_transaction
+└─ saveEventRewardInbox()  REQUIRES_NEW   별도 트랜잭션(알림함)
+   COMMIT
+```
+
+**쓰기 지연이 만드는 창.** `setFreeBalance()`를 호출한 순간 UPDATE가 나가는 게 아닙니다. Hibernate는 더티 체킹만 해두고 **flush 시점까지 미룹니다.** 그래서 `★` 두 지점 사이가 벌어집니다.
+
+```
+계정 SELECT (version=N 확보)  ─────── 그 사이 ─────── UPDATE ... WHERE version=N
+                                    ↑
+                        다른 트랜잭션이 같은 version 을 읽을 수 있는 구간
+```
+
+**실패 시퀀스.** 앱 기동 시 이벤트 핑과 출석 체크인이 같은 계정을 건드리면 이렇게 됩니다.
+
+```
+T1(ping)      read(v=N) ──────────── UPDATE ─ commit(v=N+1)
+T2(check-in)      read(v=N) ───────────────────── UPDATE ... WHERE v=N → 0 rows
+                      ↑                                        ↓
+              T1 커밋 전에 읽음                    StaleStateException
+                                          → ObjectOptimisticLockingFailureException → 409
+```
+
+두 요청이 마이크로초 단위로 부딪힐 필요가 없습니다. **T2의 읽기가 T1의 커밋보다 앞서기만 하면** 집니다. 반대로 T2가 T1 커밋 뒤에 읽으면, 시작이 더 빨랐더라도 이깁니다.
+
+**한 가지 더 — T2는 즉시 실패하지 않고 기다립니다.** UPDATE는 현재 읽기(current read)라 락이 필요한데, T1이 이미 그 행에 X 락을 쥐고 있습니다. T2는 **T1이 커밋할 때까지 UPDATE 문에서 대기**했다가, 풀려난 뒤 최신 행을 보고 그제서야 `version=N`이 0건임을 알게 됩니다. **기다린 보람 없이 지는 구조**였습니다.
+
+### 롤백은 사고가 아니라 방어가 작동한 것
+
+여기서 헷갈리기 쉬운데, **ACID가 깨진 게 아니라 깨지려는 걸 막은 겁니다.**
+
+버전 검사가 없었다면 이렇게 됩니다.
+
+```
+잔액 1517
+  T1 read 1517 → 1517+3 = 1520 기록
+  T2 read 1517 → 1517+2 = 1519 기록   ← T1 의 3베리가 증발
+```
+
+이게 **lost update**이고, 진짜로 원자성·일관성이 깨지는 경우입니다. `@Version`은 "내가 본 값이 아직 그대로인가"를 쓰기 직전에 확인하고, 아니면 **자기가 한 일을 전부 되돌립니다.** 409는 그 방어가 발화했다는 신호지 결함이 아닙니다.
+
+**롤백 범위도 트랜잭션 경계 그대로입니다.** 출석의 경우 계정 UPDATE만이 아니라 `attendance_log` INSERT까지 함께 사라집니다.
+
+```
+BEGIN
+  INSERT attendance_log            ← 이것도
+  UPDATE token_account WHERE v=N   ← 여기서 0 rows
+ROLLBACK                            ← 둘 다 없던 일로
+```
+
+그래서 "오늘 출석함" 기록이 안 남고, **다음 호출이 다시 시도 가능한 상태**가 됩니다. 실제로 한 유저는 앱을 다시 켠 2시간 51분 뒤에 받았습니다. **영구 유실이 아니라 "재시도 가능한 상태로 되돌아간 것"** 이 정확한 표현이고, 진짜 결함은 그 재시도를 아무도 안 해줬다는 점입니다.
+
+> 반대로 `attendance_log`가 남았다면 `INSERT IGNORE`가 다음에도 0을 반환해 **그날은 영영 못 받았을** 겁니다. 트랜잭션 경계를 어디까지 잡았느냐가 피해 성격을 갈랐습니다.
+
+### 비관적 락이 바꾸는 것은 "대기 지점"이다
+
+```
+before  read(락 없음, v=N) ─────────── UPDATE 에서 대기 → 깨어보니 실패
+after   SELECT ... FOR UPDATE 에서 대기 ─→ 최신 v=N+1 읽음 → UPDATE 성공
+```
+
+기다리는 시간은 전과 같습니다. **대기를 UPDATE에서 읽기로 앞당겼을 뿐**인데, 기다린 뒤 최신 값을 읽으므로 질 이유가 사라집니다. 뒤 요청이 조금 느려지고 실패하지 않습니다.
+
+검증에서 커밋이 정확히 3초 간격(주입한 지연만큼)으로 **직렬화**된 것이 이 동작을 그대로 보여줍니다.
+
 ### 교과서적 선택지 4가지
 
 | # | 방법 | 원리 | 적합한 상황 |
