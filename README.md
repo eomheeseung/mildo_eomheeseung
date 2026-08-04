@@ -127,4 +127,5 @@ AI 페르소나 기반 소개팅/매칭 서비스 **mildo**의 프론트엔드�
 - [`docs/state-management.md`](./docs/state-management.md) — 상태관리 전략(왜 전역 스토어를 안 썼나)
 - [`docs/screen-flows.md`](./docs/screen-flows.md) — 주요 화면 플로우(가입 라우팅·리퍼럴·베리)
 - [`docs/api-and-build.md`](./docs/api-and-build.md) — API 연동 · 환경 해석 · 빌드/배포
-- [`docs/troubleshooting.md`](./docs/troubleshooting.md) — 실운영 트러블슈팅
+- [`docs/troubleshooting.md`](./docs/troubleshooting.md) — 실운영 트러블슈팅(증상 → 원인 → 해결, 실측 데이터)
+- [`docs/engineering-decisions.md`](./docs/engineering-decisions.md) — 엔지니어링 결정(고르지 않은 선택지와 그 이유)
