@@ -342,8 +342,23 @@ public class TokenLedgerService {
                 .orElse(false);
     }
 
+    /**
+     * 적립 경로의 계정 확보. <b>반드시 비관적 락으로 읽는다.</b>
+     *
+     * <p>⚠️ 여기서 락 없이 읽으면 <b>같은 유저에게 동시에 적립이 들어올 때 하나가 통째로 유실된다.</b>
+     * {@link TokenAccount}에는 {@code @Version} 낙관적 락이 걸려 있어, 두 트랜잭션이 같은 버전을 읽고
+     * 각자 free_balance를 올리면 뒤늦게 커밋하는 쪽이 {@code ObjectOptimisticLockingFailureException}으로
+     * 지고 409가 나간다. 적립에는 재시도가 없으므로 그 지급은 롤백된 채 사라진다.</p>
+     *
+     * <p>2026-08-02 운영에서 실제로 터졌다 — 앱 기동 시 이벤트 핑과 출석 체크인이 같은 초에 같은 계정을
+     * 갱신해 출석 2건·핑 1건이 409로 졌다. 핑은 주기 호출이라 자동 복구되지만 출석은 콜드스타트에만
+     * 호출돼 재기동 전까지 안 들어온다(최대 2시간 51분 지연 관측).</p>
+     *
+     * <p>차감({@code spend})·회수({@code clawback})는 원래 이 방식이었고 적립만 빠져 있었다.
+     * 락으로 직렬화하면 뒤 트랜잭션이 갱신된 값을 다시 읽으므로 충돌 자체가 성립하지 않는다.</p>
+     */
     private TokenAccount getOrCreateAccount(Long userId) {
-        return tokenAccountRepository.findByUserId(userId)
+        return tokenAccountRepository.findByUserIdForUpdate(userId)
                 .orElseGet(() -> tokenAccountRepository.save(
                         TokenAccount.builder().userId(userId).build()));
     }
