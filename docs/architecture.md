@@ -17,7 +17,9 @@ mildo 백엔드는 **도메인 단위 패키지**로 구성된 Spring Boot 3 / J
 | `token` | **베리 원장**(적립/차감/만료/환불), 결제 검증(Apple/Google), 환불 회수 |
 | `referral` | 친구 초대 보상 + 어뷰징 방지 + 관리자 추적 |
 | `adspend` | Google/TikTok 광고비 일 배치 수집 → ROAS·순이익 집계 |
-| `notification` | FCM / Web Push / SSE |
+| `notification` / `push` | 알림함 + FCM·Expo 푸시 (7종 카테고리 수신 동의 필터, 야간 광고 차단) / Web Push / SSE |
+| `feed` | 커뮤니티 피드 — 게시물·2단계 댓글·좋아요·신고 (상태 보존형 삭제) |
+| `aichat` | AI 페르소나와의 대화 + 호감도 채점 (LLM 응답 분리·EMA 누적) |
 | `ad` | AppsFlyer S2S 전환 이벤트 |
 | `admin` | 관리자 대시보드 (유저·매칭·신고·분석·매출·광고비) |
 | `ai` | Claude/OpenAI 멀티 프로바이더 추상화 |

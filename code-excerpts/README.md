@@ -23,6 +23,14 @@
 | `ReferralService.java` | 친구 초대 — 3중 어뷰징 방지, 가입과 분리된 처리 |
 | `ExploreCandidateFilter.java` | 탐색 후보 필터 — 스킵/신고(양방향 차단)/기매칭/요청중 제외 |
 | `MbtiCompatibilityUtil.java` | 페르소나/MBTI 궁합 점수 계산 — 매칭·추천의 도메인 규칙 |
+| `FeedComment.java` | 커뮤니티 댓글 엔티티 — 2단계 고정, **상태 보존(soft delete)**, 카운터 컬럼 대신 원본 집계 |
+
+## 알림 · AI 채점
+
+| 파일 | 무엇을 보나 |
+|---|---|
+| `PushService.java` | 푸시 카테고리 필터 — 판정을 발사 지점이 아니라 **토큰 조회 쿼리**에 집중, 야간 광고 차단(법령), 미발송도 기록 |
+| `AffinityScoring.java` | LLM 대화 채점 — 구조화 출력/마커 이중 경로, 깨진 마커 방어(실측 기반), EMA 누적 |
 
 ## 외부 연동
 
