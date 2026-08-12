@@ -13,5 +13,7 @@
 | `RevenueReportTab.tsx` | 관리자 대시보드 — graceful degradation, 표시 반올림 vs 서버 정밀계산 분리 |
 | `platformUtils.ts` | 크로스플랫폼 UX — OS 분기 다운로드 + 보안컨텍스트 클립보드 폴백 |
 | `ReferralScreen.tsx` | 화면 컴포넌트 — 병렬 조회·상태 렌더 + 네이티브/웹 공유 분기 |
+| `pushPermission.ts` | 푸시 권한 판정의 **플랫폼 차이 흡수**(안드로이드엔 `undetermined`가 없다) + 토큰 로테이션·멱등 구독 |
+| `usePushPrimer.ts` | 프리퍼미션 — 팝업을 "설명한 화면" 뒤로 옮기고, 재노출 억제를 **모드별로** 분리 |
 
 설계 배경은 [`../docs`](../docs)의 문서에 정리돼 있습니다.
