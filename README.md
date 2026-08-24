@@ -59,6 +59,11 @@ AI 페르소나 기반 소개팅/매칭 서비스 **mildo**의 프론트엔드�
 | <img src="./docs/screenshots/02-home.png" width="170"/> | <img src="./docs/screenshots/03-persona-report.png" width="170"/> | <img src="./docs/screenshots/04-mypage.png" width="170"/> | <img src="./docs/screenshots/05-referral.png" width="170"/> |
 | AI 페르소나 카드 | AI 분석 리포트 | 프로필·재화(베리)·초대 | 친구 초대(리퍼럴) |
 
+| 일일 미션 | 밸런스 게임 |
+|:---:|:---:|
+| <img src="./docs/screenshots/06-daily-mission.png" width="170"/> | <img src="./docs/screenshots/07-balance-game.png" width="170"/> |
+| 연속 출석 도장판 + 하루 5개 미션 | 매일 1문항 · 참여 분포와 내 선택 |
+
 ---
 
 ## 하이라이트 — 설계 판단이 담긴 부분
