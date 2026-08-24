@@ -24,6 +24,8 @@
 | `ExploreCandidateFilter.java` | 탐색 후보 필터 — 스킵/신고(양방향 차단)/기매칭/요청중 제외 |
 | `MbtiCompatibilityUtil.java` | 페르소나/MBTI 궁합 점수 계산 — 매칭·추천의 도메인 규칙 |
 | `FeedComment.java` | 커뮤니티 댓글 엔티티 — 2단계 고정, **상태 보존(soft delete)**, 카운터 컬럼 대신 원본 집계 |
+| `AttendanceStreakService.java` | 연속 출석 — **매번 세는 방식이 상한에서 얼어붙던 것**을 상태 저장으로 전환, `% 7`을 저장하지 않는 이유 |
+| `HomeThemeSelection.java` | 추천 후보 선발 — 결정적 정렬이 만든 「매일 같은 사람」, 일일 셔플·반복 노출 방지·희소 테마 우선 배정 |
 
 ## 알림 · AI 채점
 
