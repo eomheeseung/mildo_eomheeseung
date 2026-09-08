@@ -204,3 +204,4 @@ Google Ads·TikTok 광고비를 매일 당겨와 베리 매출과 합쳐 **ROAS�
 - [`docs/berry-ledger.md`](./docs/berry-ledger.md) — 베리 원장 설계 상세
 - [`docs/ad-spend.md`](./docs/ad-spend.md) — 광고비 연동 설계
 - [`docs/troubleshooting.md`](./docs/troubleshooting.md) — 실운영 트러블슈팅
+- [`docs/pitfalls.md`](./docs/pitfalls.md) — **실제로 밟은 함정** (프록시·플러시 시점·락·ThreadLocal·지표 오염)
