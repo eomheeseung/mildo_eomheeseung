@@ -44,6 +44,13 @@
 | `GoogleAdsClient.java` | 광고 API 연동 (OAuth 토큰 교환 + GAQL, SDK 없이 REST) |
 | `ClaudeClient.java` | AI 멀티 프로바이더 — Claude 5 세대 대응(temperature/thinking), JSON 파싱 방어 |
 
+## 운영·모니터링
+
+| 파일 | 무엇을 보나 |
+|---|---|
+| `ManagementPortSecurity.java` | 모니터링 지표 엔드포인트 — **관리 포트를 127.0.0.1 로 분리**하고, 보안 규칙을 경로가 아니라 **요청이 들어온 포트**로 갈라 설정이 빠지면 닫힌 쪽으로 실패하게 |
+| `monitoring/config.alloy` | 운영 서버 수집기 설정 — 로그 멀티라인 묶음·레벨 라벨, 서버 자원, Spring 지표를 사설망으로 **push** |
+
 ---
 
 설계 배경은 [`../docs`](../docs)의 문서에 정리돼 있습니다.

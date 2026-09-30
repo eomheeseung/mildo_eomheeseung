@@ -1,0 +1,92 @@
+// 운영 서버의 수집기(Grafana Alloy) 설정 — /etc/alloy/config.alloy
+// 로그는 Loki, 지표는 Prometheus remote write 로 모니터링 서버에 밀어 넣는다(push).
+// 모니터링 서버는 사설 공유기 뒤에 있어 밖에서 긁어 갈 수 없고, 운영 서버의 지표 포트를 인터넷에 열 수도 없어서
+// 방향을 뒤집었다. 두 서버는 Tailscale 사설망으로만 통신한다. 주소·경로는 예시 값이다.
+// 설명: docs/monitoring-infra.md §7
+
+// ---------- 앱 로그 (logback 날짜별 파일. 압축된 과거 파일 .log.gz 는 패턴에 안 걸린다) ----------
+local.file_match "app" {
+  path_targets = [{"__path__" = "/opt/mildo/app/logs/app.*.log", "job" = "mildo-app", "host" = "mildo-prod"}]
+}
+
+loki.source.file "app" {
+  targets       = local.file_match.app.targets
+  forward_to    = [loki.process.app.receiver]
+  tail_from_end = true          // 설치 시점부터만. 없으면 그날 파일을 처음부터 다 올린다
+}
+
+loki.process "app" {
+  // 자바 스택트레이스를 한 건으로 묶는다. 새 로그는 "2026-09-30 12:00:00.000 " 로 시작하고,
+  // 그렇게 시작하지 않는 줄은 앞 로그의 연속이다. 이 단계가 없으면 예외 한 건이 줄 수만큼의 로그로 쪼개지고
+  // ERROR 가 들어 있는 첫 줄만 검색에 걸린다.
+  stage.multiline {
+    firstline     = "^\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}"
+    max_wait_time = "3s"
+    max_lines     = 200
+  }
+
+  // 레벨을 라벨로 올린다. "날짜 시각 [스레드] LEVEL ..." 형식.
+  // 값이 INFO/WARN/ERROR/DEBUG 넷뿐이라 카디널리티 걱정이 없다. 알림 규칙이 본문 검색 대신 라벨을 쓴다.
+  stage.regex {
+    expression = "^\\S+ \\S+ \\[[^\\]]*\\] (?P<level>[A-Z]+) "
+  }
+  stage.labels {
+    values = { level = "" }
+  }
+
+  forward_to = [loki.write.monitor.receiver]
+}
+
+// ---------- nginx 로그 (파일이 adm 그룹만 읽기라 alloy 계정을 adm 에 넣어야 한다) ----------
+local.file_match "nginx" {
+  path_targets = [
+    {"__path__" = "/var/log/nginx/access.log", "job" = "nginx-access", "host" = "mildo-prod"},
+    {"__path__" = "/var/log/nginx/error.log",  "job" = "nginx-error",  "host" = "mildo-prod"},
+  ]
+}
+
+loki.source.file "nginx" {
+  targets       = local.file_match.nginx.targets
+  forward_to    = [loki.write.monitor.receiver]
+  tail_from_end = true
+}
+
+loki.write "monitor" {
+  endpoint {
+    url = "http://100.x.x.10:13100/loki/api/v1/push"
+  }
+}
+
+// ---------- 서버 자원 (CPU·메모리·디스크·네트워크) — exporter 가 Alloy 안에 들어 있다 ----------
+prometheus.exporter.unix "host" { }
+
+prometheus.scrape "host" {
+  targets         = prometheus.exporter.unix.host.targets
+  scrape_interval = "30s"
+  job_name        = "node"
+  forward_to      = [prometheus.relabel.host.receiver]
+}
+
+prometheus.relabel "host" {
+  rule {
+    target_label = "instance"
+    replacement  = "mildo-prod"   // 기본값(호스트:포트) 대신 읽기 쉬운 이름
+  }
+  forward_to = [prometheus.remote_write.monitor.receiver]
+}
+
+// ---------- Spring 앱 지표 (JVM·Hikari·HTTP) — 서버 안 8091 에서만 열려 있다 ----------
+// 애플리케이션이 관리 포트를 127.0.0.1 에 묶어 두었고(ManagementPortSecurity.java), 같은 서버의 Alloy 만 긁는다.
+prometheus.scrape "spring" {
+  targets         = [{"__address__" = "127.0.0.1:8091", "instance" = "mildo-prod"}]
+  metrics_path    = "/actuator/prometheus"
+  scrape_interval = "30s"
+  job_name        = "mildo-spring"
+  forward_to      = [prometheus.remote_write.monitor.receiver]
+}
+
+prometheus.remote_write "monitor" {
+  endpoint {
+    url = "http://100.x.x.10:19090/api/v1/write"
+  }
+}

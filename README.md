@@ -228,3 +228,4 @@ Google Ads·TikTok 광고비를 매일 당겨와 베리 매출과 합쳐 **ROAS�
 - [`docs/ad-spend.md`](./docs/ad-spend.md) — 광고비 연동 설계
 - [`docs/troubleshooting.md`](./docs/troubleshooting.md) — 실운영 트러블슈팅 24건
 - [`docs/pitfalls.md`](./docs/pitfalls.md) — **실제로 밟은 함정** (프록시·플러시 시점·락·ThreadLocal·`@Async`와 커밋 순서·설정 변경의 영향 범위·지표 오염)
+- [`docs/monitoring-infra.md`](./docs/monitoring-infra.md) — **운영 모니터링 구축기** (사무실 PC 한 대 + Tailscale 사설망 + Grafana·Loki·Prometheus·Uptime Kuma, 수집기 push 구조, Spring 지표를 관리 포트로 분리, 밟은 함정 13가지, 스크린샷 포함)
