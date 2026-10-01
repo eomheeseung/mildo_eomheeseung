@@ -43,6 +43,7 @@
 |---|---|
 | `GoogleAdsClient.java` | 광고 API 연동 (OAuth 토큰 교환 + GAQL, SDK 없이 REST) |
 | `ClaudeClient.java` | AI 멀티 프로바이더 — Claude 5 세대 대응(temperature/thinking), JSON 파싱 방어 |
+| `AppsFlyerIdService.java` | 광고 가입 전환 누락 보완 — 식별자가 가입 완료 뒤에야 들어오면 그때 한 번 전송. 「처음 채움」을 **조건부 UPDATE 의 영향 행 수**로 판정(별도 플래그 없이 동시 요청에도 회원당 1회), 7일 기한 |
 
 ## 운영·모니터링
 
