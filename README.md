@@ -80,7 +80,7 @@ DB 스키마 설계, 결제/재화 시스템, 본인인증·회원가입 게이�
 - **트랜잭션 경계에서 외부 호출을 걷어냈다** — LLM 호출(40초)이 `@Transactional` 안에 있어 커넥션을 붙잡고, 실패하면 가입까지 롤백되던 구조를 쪼갬(점유 22.5초→0초 실측). 이어서 응답 자체를 기다리지 않게 **`202 + 상태 조회` 비동기 가입**으로 전환 — 요청 필드 `async: true` 옵트인이라 구버전 앱은 그대로 동작.
 - **푸시는 커밋 뒤에 보낸다** — `@Async` 발송이 저장 커밋을 기다리지 않아 앱 아이콘 배지가 하나 모자라던 것을 `afterCommit` 으로 고정. 롤백된 알림의 푸시가 나가던 부작용도 함께 사라짐.
 
-> 상세: [`docs/engineering-decisions.md`](./docs/engineering-decisions.md) — JDK 21 마이그레이션, HTTP 클라이언트 선택, 트랜잭션 전략, **동시성 제어(선택지 비교와 번복)**, 시각 처리, 백오피스 분리, 알림 카테고리 설계, LLM 응답 형식 선택, 트랜잭션 경계와 특성화 테스트, **앱 아이콘 배지, 대화방 나가기 고유 제약, 추천 줄 세우기, 비동기 가입**, 코딩 정책.
+> 상세: [`docs/engineering-decisions.md`](./docs/engineering-decisions.md) — JDK 21 마이그레이션, HTTP 클라이언트 선택, 트랜잭션 전략, **동시성 제어(선택지 비교와 번복)**, 시각 처리, 백오피스 분리, 알림 카테고리 설계, LLM 응답 형식 선택, 트랜잭션 경계와 특성화 테스트, **앱 아이콘 배지, 대화방 나가기 고유 제약, 추천 줄 세우기, 비동기 가입, AI 생성문에 바뀌는 값을 박지 않기**, 코딩 정책.
 
 ---
 
@@ -209,7 +209,9 @@ Google Ads·TikTok 광고비를 매일 당겨와 베리 매출과 합쳐 **ROAS�
 
 문서: [`docs/troubleshooting.md`](./docs/troubleshooting.md)
 
-실서비스를 운영하며 진단·해결한 사례 25건을 정리했습니다. 예시:
+실서비스를 운영하며 진단·해결한 사례 27건을 정리했습니다. 예시:
+- **공지를 읽었는데 50초 동안 "읽음"이 안 됨** — 읽음 기록 INSERT 가 FK 검사로 공지 행에 공유 잠금을 걸었고, 같은 요청의 `REQUIRES_NEW` 조회수 UPDATE 가 그 잠금을 기다림. 바깥을 붙잡은 건 애플리케이션 스레드라 DB 교착 탐지가 못 잡고 50초 타임아웃까지 멈춤. 조회수를 `afterCommit` 으로 미뤄 해결
+- **가입 전환이 한 회원에게 여러 번 나감** — "식별자는 회원당 한 번 채워진다"는 전제를, 다른 요청의 **전 칼럼 UPDATE** 가 식별자를 null 로 되돌리며 깨뜨림. `@DynamicUpdate` + 전용 칼럼 조건부 UPDATE 로 발송 자격을 차지
 - **가입 요청이 끊기고 재시도는 409** — AI 페르소나 생성을 42초 동기 대기, 앱이 31초 전에 끊은 요청이 83%. 빠르게 만드는 대신 **`202 + 상태 조회` 비동기 가입**으로 전환하고, 커밋 전 `@Async` 발사·자기호출·재시도 중복 실행 경계를 하나씩 막음
 - **설정 한 줄로 프로필 사진 업로드가 주말 내내 503** — 모델 교체가 SDK를 거치지 않는 직접 HTTP 경로를 깨뜨림(본인 실수). 330건 실패·71명 안내 후, 같은 설정을 읽는 호출 경로 5곳 전수 점검
 - **셔플은 도는데 "뜨는 사람만 뜬다"** — 뷰어별 회전은 정상(전날 중복 0.34/6)이었지만 볼 만한 풀이 48명이라 집단 체감은 "그 사람만". 진짜 버그는 노출 기록을 안 남기던 화면 하나
@@ -237,7 +239,7 @@ Google Ads·TikTok 광고비를 매일 당겨와 베리 매출과 합쳐 **ROAS�
 - [`docs/flows.md`](./docs/flows.md) — 주요 플로우(결제·가입 시퀀스)
 - [`docs/berry-ledger.md`](./docs/berry-ledger.md) — 베리 원장 설계 상세
 - [`docs/ad-spend.md`](./docs/ad-spend.md) — 광고비 연동 설계
-- [`docs/troubleshooting.md`](./docs/troubleshooting.md) — 실운영 트러블슈팅 25건
-- [`docs/pitfalls.md`](./docs/pitfalls.md) — **실제로 밟은 함정** (프록시·플러시 시점·락·ThreadLocal·`@Async`와 커밋 순서·설정 변경의 영향 범위·지표 오염)
+- [`docs/troubleshooting.md`](./docs/troubleshooting.md) — 실운영 트러블슈팅 27건
+- [`docs/pitfalls.md`](./docs/pitfalls.md) — **실제로 밟은 함정** (프록시·플러시 시점·전 칼럼 UPDATE·락·ThreadLocal·`@Async`와 커밋 순서·`REQUIRES_NEW` 와 바깥 잠금·설정 변경의 영향 범위·지표 오염)
 - [`docs/monitoring-infra.md`](./docs/monitoring-infra.md) — **운영 모니터링 구축기** (사무실 PC 한 대 + Tailscale 사설망 + Grafana·Loki·Prometheus·Uptime Kuma, 수집기 push 구조, Spring 지표를 관리 포트로 분리, 밟은 함정 13가지, 스크린샷 포함)
 - [`docs/alert-relay.md`](./docs/alert-relay.md) — **알림 중계 구축기** (Grafana·Uptime Kuma 웹훅 → GPT 「쉽게 풀면」 → 메일, 운영 서버 밖에서 보내는 이유, GPT 장애에도 발송 보장, 운영 서버 알림과 역할 분담)

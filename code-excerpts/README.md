@@ -36,6 +36,8 @@
 | `PushService.java` | 푸시 카테고리 필터 — 판정을 발사 지점이 아니라 **토큰 조회 쿼리**에 집중, 야간 광고 차단(법령), 미발송도 기록. **앱 아이콘 배지** — 토큰별 안 읽은 개수(알림함과 같은 함수), 같은 숫자끼리 멀티캐스트 묶기, 계산 실패 시 배지 없이 발송 |
 | `NotificationDispatch.java` | 알림 저장 → 푸시를 **커밋 뒤로(`afterCommit`)** — `@Async` 스레드가 커밋 전 행을 못 봐 배지가 1 모자라던 문제, 롤백 시 푸시 미발송, AFTER_COMMIT 리스너 안에서 등록한 후처리가 안 도는 함정 |
 | `AffinityScoring.java` | LLM 대화 채점 — 구조화 출력/마커 이중 경로, 깨진 마커 방어(실측 기반), EMA 누적 |
+| `NoticeViewCount.java` | 공지 읽음 + 조회수 — `REQUIRES_NEW` 가 **바깥 트랜잭션의 FK 공유 잠금**을 기다려 50초 멈추던 것을 `afterCommit` 으로 미룸. DB 교착 탐지가 못 잡는 이유 |
+| `ReportNickname.java` | AI 리포트 호칭 — 문장엔 **`{닉네임}` 자리표시**만 저장, 응답 조립 때 현재 닉네임으로 채움(중첩 맵 사본, 빈 닉네임은 다른 개인정보로 대신하지 않음) |
 
 ## 외부 연동
 
@@ -44,6 +46,7 @@
 | `GoogleAdsClient.java` | 광고 API 연동 (OAuth 토큰 교환 + GAQL, SDK 없이 REST) |
 | `ClaudeClient.java` | AI 멀티 프로바이더 — Claude 5 세대 대응(temperature/thinking), JSON 파싱 방어 |
 | `AppsFlyerIdService.java` | 광고 가입 전환 누락 보완 — 식별자가 가입 완료 뒤에야 들어오면 그때 한 번 전송. 「처음 채움」을 **조건부 UPDATE 의 영향 행 수**로 판정(별도 플래그 없이 동시 요청에도 회원당 1회), 7일 기한 |
+| `RegistrationConversionOnce.java` | 위 전제가 깨진 후속 — 다른 요청의 **전 칼럼 UPDATE 가 식별자를 null 로 되돌려** 전환이 반복됨. `@DynamicUpdate` + 전용 칼럼을 조건부 UPDATE 로 **차지한 요청만 발송**, 배포 전 기존 발송분 백필 |
 
 ## 운영·모니터링
 
