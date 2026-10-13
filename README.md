@@ -243,4 +243,5 @@ Google Ads·TikTok 광고비를 매일 당겨와 베리 매출과 합쳐 **ROAS�
 - [`docs/pitfalls.md`](./docs/pitfalls.md) — **실제로 밟은 함정** (프록시·플러시 시점·전 칼럼 UPDATE·락·ThreadLocal·`@Async`와 커밋 순서·`REQUIRES_NEW` 와 바깥 잠금·설정 변경의 영향 범위·지표 오염)
 - [`docs/monitoring-infra.md`](./docs/monitoring-infra.md) — **운영 모니터링 구축기** (사무실 PC 한 대 + Tailscale 사설망 + Grafana·Loki·Prometheus·Uptime Kuma, 수집기 push 구조, Spring 지표를 관리 포트로 분리, 밟은 함정 13가지, 스크린샷 포함)
 - [`docs/shared-db-neighbor-query.md`](./docs/shared-db-neighbor-query.md) — **공용 DB 이웃 서비스의 DELETE 분석** (우리 서비스 코드가 아닌 이웃 서비스 배치가 백업 잠금을 거쳐 공용 DB 쓰기를 멈춘 사례. 범위 조건 + LIMIT 에서 옵티마이저가 엉뚱한 인덱스를 고른 원리, 복합 인덱스를 `=` 로 타게 바꾼 수정안, 운영·로컬 재현 전후 측정)
+- [`docs/rds-bluegreen-upgrade.md`](./docs/rds-bluegreen-upgrade.md) — **AWS RDS MySQL 8.0 → 8.4 블루/그린 업그레이드** (사내 다른 프로젝트. EOL 확장 지원 자동 과금을 사용량 유형으로 찾아낸 경위, 인플레이스·블루/그린·이관 비교, 인증 플러그인·`lower_case_table_names` 사전 검증, 전환 전 그린 실계정 접속 확인, 다운타임 약 1분·앱 무변경, 스크린샷 포함)
 - [`docs/alert-relay.md`](./docs/alert-relay.md) — **알림 중계 구축기** (Grafana·Uptime Kuma 웹훅 → GPT 「쉽게 풀면」 → 메일, 운영 서버 밖에서 보내는 이유, GPT 장애에도 발송 보장, 운영 서버 알림과 역할 분담)
