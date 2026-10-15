@@ -4,6 +4,8 @@
 > 한 바퀴를 실제로 돌린 기록이다. 결론부터: 구현 1분 40초, 검증 2분, 사람이 누른 건 머지 버튼 하나. 그리고 그 하루의 대부분은
 > 에이전트가 아니라 **인증·브랜치·셸 환경** 같은 바닥 공사에 들어갔다.
 
+> FE 줄기(실기기 점검 러너·출시 파이프라인·AOS/iOS 판정)는 fe 브랜치 [`docs/agent-qa-runner.md`](https://github.com/eomheeseung/mildo_eomheeseung/blob/fe/docs/agent-qa-runner.md) 에 있다.
+
 ## 1. 요구와 현실 — 「전부 자동화」는 어디까지 가능한가
 
 대표의 요구는 PM·BE·FE·테스트·CS 에이전트를 두고 서비스 운영을 통째로 맡기는 것이었다. 먼저 해외 사례를 조사했다.
