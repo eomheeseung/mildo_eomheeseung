@@ -158,3 +158,4 @@ AI 페르소나 기반 소개팅/매칭 서비스 **mildo**의 프론트엔드�
 - [`docs/api-and-build.md`](./docs/api-and-build.md) — API 연동 · 환경 해석 · 빌드/배포
 - [`docs/troubleshooting.md`](./docs/troubleshooting.md) — 실운영 트러블슈팅(증상 → 원인 → 해결, 실측 데이터)
 - [`docs/engineering-decisions.md`](./docs/engineering-decisions.md) — 엔지니어링 결정(고르지 않은 선택지와 그 이유)
+- [`docs/agent-qa-runner.md`](./docs/agent-qa-runner.md) — 에이전트 실기기 QA(스크립트 E2E 대신 점검 목록 + adb, 출시 파이프라인 판정)
