@@ -2,7 +2,7 @@
 
 > 2026-10-15. 「서비스 개발을 AI 에이전트로 자동화하자」는 요구에서 프론트엔드 몫을 정리한 기록이다.
 > 서버 쪽 파이프라인(이슈 → 구현 에이전트 → 검증 에이전트 → 사람 승인)은 be 브랜치
-> [`docs/agent-pipeline.md`](https://github.com/eomheeseung/mildo_eomheeseung/blob/be/docs/agent-pipeline.md)에 있다.
+> [`docs/agent/agent-pipeline.md`](https://github.com/eomheeseung/mildo_eomheeseung/blob/be/docs/agent/agent-pipeline.md)에 있다.
 > 이 문서는 그 흐름에서 **앱을 어떻게 검증할 것인가**를 다룬다.
 > 결론부터 말하면 이렇다.
 > - 스크립트형 E2E는 쓰지 않는다.
