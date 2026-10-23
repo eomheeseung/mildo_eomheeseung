@@ -80,7 +80,7 @@ DB 스키마 설계, 결제/재화 시스템, 본인인증·회원가입 게이�
 - **트랜잭션 경계에서 외부 호출을 걷어냈다** — LLM 호출(40초)이 `@Transactional` 안에 있어 커넥션을 붙잡고, 실패하면 가입까지 롤백되던 구조를 쪼갬(점유 22.5초→0초 실측). 이어서 응답 자체를 기다리지 않게 **`202 + 상태 조회` 비동기 가입**으로 전환 — 요청 필드 `async: true` 옵트인이라 구버전 앱은 그대로 동작.
 - **푸시는 커밋 뒤에 보낸다** — `@Async` 발송이 저장 커밋을 기다리지 않아 앱 아이콘 배지가 하나 모자라던 것을 `afterCommit` 으로 고정. 롤백된 알림의 푸시가 나가던 부작용도 함께 사라짐.
 
-> 상세: [`docs/engineering-decisions.md`](./docs/engineering-decisions.md) — JDK 21 마이그레이션, HTTP 클라이언트 선택, 트랜잭션 전략, **동시성 제어(선택지 비교와 번복)**, 시각 처리, 백오피스 분리, 알림 카테고리 설계, LLM 응답 형식 선택, 트랜잭션 경계와 특성화 테스트, **앱 아이콘 배지, 대화방 나가기 고유 제약, 추천 줄 세우기, 비동기 가입, AI 생성문에 바뀌는 값을 박지 않기**, 코딩 정책.
+> 상세: [`docs/design/engineering-decisions.md`](./docs/design/engineering-decisions.md) — JDK 21 마이그레이션, HTTP 클라이언트 선택, 트랜잭션 전략, **동시성 제어(선택지 비교와 번복)**, 시각 처리, 백오피스 분리, 알림 카테고리 설계, LLM 응답 형식 선택, 트랜잭션 경계와 특성화 테스트, **앱 아이콘 배지, 대화방 나가기 고유 제약, 추천 줄 세우기, 비동기 가입, AI 생성문에 바뀌는 값을 박지 않기**, 코딩 정책.
 
 ---
 
@@ -183,7 +183,7 @@ Google Ads·TikTok 광고비를 매일 당겨와 베리 매출과 합쳐 **ROAS�
 - 「마지막 노출일」은 **띄우는 화면이 전부 기록해야** 의미가 있다 — 기록을 빠뜨린 화면 하나(가치관 추천)만 상위 10% 노출 비중이 48%로 튀던 것을 찾아 고침.
 
 ### 10. 운영 모니터링·알림 — 서버가 죽어도 알림은 나가게
-[`ManagementPortSecurity.java`](./code-excerpts/ManagementPortSecurity.java) · [`config.alloy`](./code-excerpts/monitoring/config.alloy) · 문서 [모니터링 구축기](./docs/monitoring-infra.md) · [알림 중계 구축기](./docs/alert-relay.md)
+[`ManagementPortSecurity.java`](./code-excerpts/ManagementPortSecurity.java) · [`config.alloy`](./code-excerpts/monitoring/config.alloy) · 문서 [모니터링 구축기](./docs/ops/monitoring-infra.md) · [알림 중계 구축기](./docs/ops/alert-relay.md)
 
 - 장애를 사용자 문의로 먼저 알던 구조(외부 AI 한도로 가입이 막힌 걸 이틀 뒤 발견)를 바꾸려고, 클라우드 비용 없이 **사무실 PC 한 대**를 모니터링 서버로. 그 PC 는 공유기 뒤라 운영 서버가 긁어 가게 할 수 없어 **방향을 뒤집어 운영 서버가 사설망으로 밀어 넣는다**(push).
 - Spring 지표는 서비스 포트가 아닌 **127.0.0.1 전용 관리 포트**로 분리하고, 보안 규칙을 경로가 아니라 **요청이 들어온 포트**로 갈라 설정이 빠지면 닫힌 쪽으로 실패하게 함.
@@ -207,7 +207,7 @@ Google Ads·TikTok 광고비를 매일 당겨와 베리 매출과 합쳐 **ROAS�
 
 ## 트러블슈팅 (실운영)
 
-문서: [`docs/troubleshooting.md`](./docs/troubleshooting.md)
+문서: [`docs/ops/troubleshooting.md`](./docs/ops/troubleshooting.md)
 
 실서비스를 운영하며 진단·해결한 사례 27건을 정리했습니다. 예시:
 - **공지를 읽었는데 50초 동안 "읽음"이 안 됨** — 읽음 기록 INSERT 가 FK 검사로 공지 행에 공유 잠금을 걸었고, 같은 요청의 `REQUIRES_NEW` 조회수 UPDATE 가 그 잠금을 기다림. 바깥을 붙잡은 건 애플리케이션 스레드라 DB 교착 탐지가 못 잡고 50초 타임아웃까지 멈춤. 조회수를 `afterCommit` 으로 미뤄 해결
@@ -233,17 +233,22 @@ Google Ads·TikTok 광고비를 매일 당겨와 베리 매출과 합쳐 **ROAS�
 
 ## 문서
 
-- [`docs/architecture.md`](./docs/architecture.md) — 시스템/도메인 구조
-- [`docs/engineering-decisions.md`](./docs/engineering-decisions.md) — **왜 그렇게 했나** (JDK 21·HTTP·트랜잭션·코딩 정책)
-- [`docs/data-model.md`](./docs/data-model.md) — 데이터 모델(ERD)
-- [`docs/flows.md`](./docs/flows.md) — 주요 플로우(결제·가입 시퀀스)
-- [`docs/berry-ledger.md`](./docs/berry-ledger.md) — 베리 원장 설계 상세
-- [`docs/ad-spend.md`](./docs/ad-spend.md) — 광고비 연동 설계
-- [`docs/troubleshooting.md`](./docs/troubleshooting.md) — 실운영 트러블슈팅 27건
-- [`docs/pitfalls.md`](./docs/pitfalls.md) — **실제로 밟은 함정** (프록시·플러시 시점·전 칼럼 UPDATE·락·ThreadLocal·`@Async`와 커밋 순서·`REQUIRES_NEW` 와 바깥 잠금·설정 변경의 영향 범위·지표 오염)
-- [`docs/monitoring-infra.md`](./docs/monitoring-infra.md) — **운영 모니터링 구축기** (사무실 PC 한 대 + Tailscale 사설망 + Grafana·Loki·Prometheus·Uptime Kuma, 수집기 push 구조, Spring 지표를 관리 포트로 분리, 밟은 함정 13가지, 스크린샷 포함)
-- [`docs/shared-db-neighbor-query.md`](./docs/shared-db-neighbor-query.md) — **공용 DB 이웃 서비스의 DELETE 분석** (우리 서비스 코드가 아닌 이웃 서비스 배치가 백업 잠금을 거쳐 공용 DB 쓰기를 멈춘 사례. 범위 조건 + LIMIT 에서 옵티마이저가 엉뚱한 인덱스를 고른 원리, 복합 인덱스를 `=` 로 타게 바꾼 수정안, 운영·로컬 재현 전후 측정)
-- [`docs/rds-bluegreen-upgrade.md`](./docs/rds-bluegreen-upgrade.md) — **AWS RDS MySQL 8.0 → 8.4 블루/그린 업그레이드** (사내 다른 프로젝트. EOL 확장 지원 자동 과금을 사용량 유형으로 찾아낸 경위, 인플레이스·블루/그린·이관 비교, 인증 플러그인·`lower_case_table_names` 사전 검증, 전환 전 그린 실계정 접속 확인, 다운타임 약 1분·앱 무변경, 스크린샷 포함)
-- [`docs/alert-relay.md`](./docs/alert-relay.md) — **알림 중계 구축기** (Grafana·Uptime Kuma 웹훅 → GPT 「쉽게 풀면」 → 메일, 운영 서버 밖에서 보내는 이유, GPT 장애에도 발송 보장, 운영 서버 알림과 역할 분담)
-- [`docs/agent-pipeline.md`](./docs/agent-pipeline.md) — **AI 에이전트 개발 파이프라인 구축기** (이슈 → 구현 에이전트 → 검증 에이전트 → 사람 승인 한 바퀴를 하루 만에. GitHub 라벨 보드, self-hosted 러너 한 대에 스테이징까지, 발송이 꺼진 스테이징 프로파일·테스트 계정 초기화 API, 밟은 함정 8가지 — 기본 브랜치·키체인·시크릿·로그 프로파일, 첫 실행 1분 40초/2분, 「자동화됐다」의 숫자 기준)
-- [`docs/agent-office.md`](./docs/agent-office.md) — **에이전트 사무실** (에이전트가 일하는 모습을 Three.js 4층 건물로. claude-office 훅 백엔드 위에 화면을 새로 얹고, 일꾼 잠금 파일+훅 DB 로 「누가 무엇을」 판정, 4층 서버실 랙 3대 = Prometheus·Loki·Uptime Kuma 운영 상태(30초 캐시·수집 끊김과 0건 구분), 탕비실 커피머신 = 에이전트 사용량, A* 길찾기·엘리베이터, 신호등·차, GPT 가 Blender Python 으로 절차 생성한 직원 GLB 25종과 검증 9가지, 스크린샷 포함)
+**설계** — `docs/design/`
+- [`docs/design/architecture.md`](./docs/design/architecture.md) — 시스템/도메인 구조
+- [`docs/design/engineering-decisions.md`](./docs/design/engineering-decisions.md) — **왜 그렇게 했나** (JDK 21·HTTP·트랜잭션·코딩 정책)
+- [`docs/design/data-model.md`](./docs/design/data-model.md) — 데이터 모델(ERD)
+- [`docs/design/flows.md`](./docs/design/flows.md) — 주요 플로우(결제·가입 시퀀스)
+- [`docs/design/berry-ledger.md`](./docs/design/berry-ledger.md) — 베리 원장 설계 상세
+- [`docs/design/ad-spend.md`](./docs/design/ad-spend.md) — 광고비 연동 설계
+
+**운영·인프라** — `docs/ops/`
+- [`docs/ops/troubleshooting.md`](./docs/ops/troubleshooting.md) — 실운영 트러블슈팅 27건
+- [`docs/ops/pitfalls.md`](./docs/ops/pitfalls.md) — **실제로 밟은 함정** (프록시·플러시 시점·전 칼럼 UPDATE·락·ThreadLocal·`@Async`와 커밋 순서·`REQUIRES_NEW` 와 바깥 잠금·설정 변경의 영향 범위·지표 오염)
+- [`docs/ops/monitoring-infra.md`](./docs/ops/monitoring-infra.md) — **운영 모니터링 구축기** (사무실 PC 한 대 + Tailscale 사설망 + Grafana·Loki·Prometheus·Uptime Kuma, 수집기 push 구조, Spring 지표를 관리 포트로 분리, 밟은 함정 13가지, 스크린샷 포함)
+- [`docs/ops/shared-db-neighbor-query.md`](./docs/ops/shared-db-neighbor-query.md) — **공용 DB 이웃 서비스의 DELETE 분석** (우리 서비스 코드가 아닌 이웃 서비스 배치가 백업 잠금을 거쳐 공용 DB 쓰기를 멈춘 사례. 범위 조건 + LIMIT 에서 옵티마이저가 엉뚱한 인덱스를 고른 원리, 복합 인덱스를 `=` 로 타게 바꾼 수정안, 운영·로컬 재현 전후 측정)
+- [`docs/ops/rds-bluegreen-upgrade.md`](./docs/ops/rds-bluegreen-upgrade.md) — **AWS RDS MySQL 8.0 → 8.4 블루/그린 업그레이드** (사내 다른 프로젝트. EOL 확장 지원 자동 과금을 사용량 유형으로 찾아낸 경위, 인플레이스·블루/그린·이관 비교, 인증 플러그인·`lower_case_table_names` 사전 검증, 전환 전 그린 실계정 접속 확인, 다운타임 약 1분·앱 무변경, 스크린샷 포함)
+- [`docs/ops/alert-relay.md`](./docs/ops/alert-relay.md) — **알림 중계 구축기** (Grafana·Uptime Kuma 웹훅 → GPT 「쉽게 풀면」 → 메일, 운영 서버 밖에서 보내는 이유, GPT 장애에도 발송 보장, 운영 서버 알림과 역할 분담)
+
+**AI 에이전트** — `docs/agent/`
+- [`docs/agent/agent-pipeline.md`](./docs/agent/agent-pipeline.md) — **AI 에이전트 개발 파이프라인 구축기** (이슈 → 구현 에이전트 → 검증 에이전트 → 사람 승인 한 바퀴를 하루 만에. GitHub 라벨 보드, self-hosted 러너 한 대에 스테이징까지, 발송이 꺼진 스테이징 프로파일·테스트 계정 초기화 API, 밟은 함정 8가지 — 기본 브랜치·키체인·시크릿·로그 프로파일, 첫 실행 1분 40초/2분, 「자동화됐다」의 숫자 기준)
+- [`docs/agent/agent-office.md`](./docs/agent/agent-office.md) — **에이전트 사무실** (에이전트가 일하는 모습을 Three.js 4층 건물로. claude-office 훅 백엔드 위에 화면을 새로 얹고, 일꾼 잠금 파일+훅 DB 로 「누가 무엇을」 판정, 4층 서버실 랙 3대 = Prometheus·Loki·Uptime Kuma 운영 상태(30초 캐시·수집 끊김과 0건 구분), 탕비실 커피머신 = 에이전트 사용량, A* 길찾기·엘리베이터, 신호등·차, GPT 가 Blender Python 으로 절차 생성한 직원 GLB 25종과 검증 9가지, 스크린샷 포함)

@@ -2,7 +2,7 @@
 // 로그는 Loki, 지표는 Prometheus remote write 로 모니터링 서버에 밀어 넣는다(push).
 // 모니터링 서버는 사설 공유기 뒤에 있어 밖에서 긁어 갈 수 없고, 운영 서버의 지표 포트를 인터넷에 열 수도 없어서
 // 방향을 뒤집었다. 두 서버는 Tailscale 사설망으로만 통신한다. 주소·경로는 예시 값이다.
-// 설명: docs/monitoring-infra.md §7
+// 설명: docs/ops/monitoring-infra.md §7
 
 // ---------- 앱 로그 (logback 날짜별 파일. 압축된 과거 파일 .log.gz 는 패턴에 안 걸린다) ----------
 local.file_match "app" {

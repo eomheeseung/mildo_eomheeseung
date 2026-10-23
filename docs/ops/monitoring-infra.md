@@ -254,7 +254,7 @@ LISTEN 0 4096 0.0.0.0:3000 users:(("docker-proxy",pid=...))
 
 이 변경이 나중에 두 번 발목을 잡았다(→ 함정 4·5). 포트를 바꿨으면 **그 포트를 아는 모든 곳**(수집기 설정, 점검 스크립트, 문서)을 같이 바꿔야 한다.
 
-![컨테이너 4개가 뜬 상태 (Grafana·Uptime Kuma 버전을 올리기 전 시점의 화면)](images/monitoring/compose-containers.png)
+![컨테이너 4개가 뜬 상태 (Grafana·Uptime Kuma 버전을 올리기 전 시점의 화면)](./images/monitoring/compose-containers.png)
 
 ### 6-2. docker-compose.yml
 
@@ -405,7 +405,7 @@ sudo systemctl enable --now alloy
 
 ### 7-3. 설정 — `/etc/alloy/config.alloy`
 
-전문은 [`code-excerpts/monitoring/config.alloy`](../code-excerpts/monitoring/config.alloy). 핵심만 설명한다.
+전문은 [`code-excerpts/monitoring/config.alloy`](../../code-excerpts/monitoring/config.alloy). 핵심만 설명한다.
 
 **(1) 앱 로그 — 스택트레이스를 한 건으로 묶는다**
 
@@ -530,7 +530,7 @@ curl -s http://127.0.0.1:12345/metrics | grep -E '^prometheus_remote_storage_sam
 
 "서비스가 active" 는 프로세스가 떠 있다는 뜻일 뿐이다. **`samples_total` 이 늘고 `failed_total` 이 0** 인 것이 "보내고 있다"의 증거다.
 
-![서버 자원 대시보드 — 수집 시작 직후라 그래프 오른쪽 끝에만 데이터가 있다](images/monitoring/grafana-node-exporter.png)
+![서버 자원 대시보드 — 수집 시작 직후라 그래프 오른쪽 끝에만 데이터가 있다](./images/monitoring/grafana-node-exporter.png)
 
 ---
 
@@ -615,7 +615,7 @@ private boolean isManagementPort(int localPort) {
 }
 ```
 
-발췌: [`code-excerpts/ManagementPortSecurity.java`](../code-excerpts/ManagementPortSecurity.java)
+발췌: [`code-excerpts/ManagementPortSecurity.java`](../../code-excerpts/ManagementPortSecurity.java)
 
 **안전장치가 두 겹이다.**
 
@@ -660,7 +660,7 @@ process_uptime_seconds 81.5
 `uri` 라벨은 실제 경로가 아니라 **매핑 패턴**(`/v1/users/{id}`)으로 들어온다. 실제 경로(`/v1/users/1234`)였다면
 사용자 수만큼 라벨 값이 생겨 저장소가 터진다. Micrometer 가 이걸 알아서 해 준다.
 
-![Prometheus 에서 본 커넥션 풀 지표 — 라벨이 붙어 들어온 것을 확인](images/monitoring/prometheus-hikari.png)
+![Prometheus 에서 본 커넥션 풀 지표 — 라벨이 붙어 들어온 것을 확인](./images/monitoring/prometheus-hikari.png)
 
 | 볼 것 | 쿼리 |
 |---|---|
@@ -743,7 +743,7 @@ docker compose pull grafana && docker compose up -d grafana
 
 Spring 지표를 붙인 직후 JVM 대시보드의 숫자 칸이 전부 N/A 였다.
 
-![지표 수집 1~2분 뒤의 화면. 위쪽 숫자 칸은 N/A 인데 아래 그래프에는 값이 찍혀 있다](images/monitoring/grafana-jvm-na.png)
+![지표 수집 1~2분 뒤의 화면. 위쪽 숫자 칸은 N/A 인데 아래 그래프에는 값이 찍혀 있다](./images/monitoring/grafana-jvm-na.png)
 
 같은 쿼리를 Prometheus 에 직접 넣으면 값이 나온다.
 
@@ -796,7 +796,7 @@ It is NO LONGER maintained and does not receive any bug or security fixes.
 - API 만 빨강 → Spring 이 죽었거나 재기동 중 (배포 때 수십 초 빨강은 정상)
 - 둘 다 빨강 → 서버·nginx·도메인·인증서
 
-![Uptime Kuma — 60초마다 확인. 회색 구간은 감시를 시작하기 전이다](images/monitoring/uptime-kuma.png)
+![Uptime Kuma — 60초마다 확인. 회색 구간은 감시를 시작하기 전이다](./images/monitoring/uptime-kuma.png)
 
 ### 10-3. "저장했다"는 DB 로 확인한다
 

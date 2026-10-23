@@ -2,7 +2,7 @@
 
 Google Ads·TikTok에 집행한 광고비를 매일 자동 수집해, 인앱 재화(베리) 매출과 합쳐 **ROAS·순이익**을 관리자에서 보여주는 기능입니다.
 
-관련 코드: [`GoogleAdsClient.java`](../code-excerpts/GoogleAdsClient.java)
+관련 코드: [`GoogleAdsClient.java`](../../code-excerpts/GoogleAdsClient.java)
 
 ## 구성
 

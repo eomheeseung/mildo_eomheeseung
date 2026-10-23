@@ -3,7 +3,7 @@
 > 2026-10-19 ~ 10-23. [AI 에이전트 개발 파이프라인](./agent-pipeline.md)을 돌리기 시작하자 대표가 물었다. 「지금 누가 무슨 일 하고 있어?」
 > 답하려면 터미널 로그를 열어야 했다. 그래서 **에이전트가 일하는 모습을 그대로 보여 주는 사무실 화면**을 만들었다. 사무실은 4층 건물이고,
 > 에이전트는 자기 자리에 앉아 일한다. 일이 생기면 다른 팀 자리나 회의실로 걸어간다. 4층 서버실의 랙 3대는 실제 운영 서버 상태를 보여 준다.
-> 데이터는 [모니터링 스택](./monitoring-infra.md)(Prometheus·Loki·Uptime Kuma)에서 읽는다.
+> 데이터는 [모니터링 스택](../ops/monitoring-infra.md)(Prometheus·Loki·Uptime Kuma)에서 읽는다.
 > 이 문서는 구성, 데이터 연결, 직원 3D 모델을 만든 방법을 정리한다.
 
 ![1층 로비와 주변 도시](./images/agent-office/office-city.png)
@@ -339,4 +339,4 @@ image-to-3D 모델이나 외부 3D 생성 서비스는 쓰지 않았다. 대신 
 
 ---
 
-관련 문서: [AI 에이전트 개발 파이프라인](./agent-pipeline.md) · [운영 모니터링 인프라](./monitoring-infra.md) · [알림 중계](./alert-relay.md)
+관련 문서: [AI 에이전트 개발 파이프라인](./agent-pipeline.md) · [운영 모니터링 인프라](../ops/monitoring-infra.md) · [알림 중계](../ops/alert-relay.md)

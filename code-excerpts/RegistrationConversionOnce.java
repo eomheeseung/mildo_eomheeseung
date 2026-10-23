@@ -1,6 +1,6 @@
 package mildo.ad;
 
-// 발췌: 가입 전환을 회원당 한 번만 보내기. 설명: docs/troubleshooting.md §27, docs/pitfalls.md B-4
+// 발췌: 가입 전환을 회원당 한 번만 보내기. 설명: docs/ops/troubleshooting.md §27, docs/ops/pitfalls.md B-4
 // 앞선 보완(§25, AppsFlyerIdService.java)은 "식별자의 비어 있음 → 있음 전이는 회원당 한 번"에 기댔는데,
 // 다른 요청이 엔티티 전체를 저장하면서 식별자를 옛 값(null)으로 되돌려 그 전이가 반복됐다.
 

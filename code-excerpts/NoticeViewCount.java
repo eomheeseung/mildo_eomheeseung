@@ -1,6 +1,6 @@
 package mildo.notification.service;
 
-// 발췌: 공지 읽음 처리 + 조회수 증가. 설명: docs/troubleshooting.md §26, docs/pitfalls.md C-6
+// 발췌: 공지 읽음 처리 + 조회수 증가. 설명: docs/ops/troubleshooting.md §26, docs/ops/pitfalls.md C-6
 
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;

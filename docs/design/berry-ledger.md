@@ -3,7 +3,7 @@
 mildo의 유료 기능(매칭 신청·AI 채팅·통합 리포트 등)은 **베리**라는 인앱 재화로 차감합니다.
 구독제와 독립된 additive 도메인으로, **원장(ledger) 패턴**으로 구현했습니다.
 
-관련 코드: [`TokenLedgerService.java`](../code-excerpts/TokenLedgerService.java) · [`TokenRewardEventListener.java`](../code-excerpts/TokenRewardEventListener.java) · [`CiHasher.java`](../code-excerpts/CiHasher.java)
+관련 코드: [`TokenLedgerService.java`](../../code-excerpts/TokenLedgerService.java) · [`TokenRewardEventListener.java`](../../code-excerpts/TokenRewardEventListener.java) · [`CiHasher.java`](../../code-excerpts/CiHasher.java)
 
 ## 데이터 모델
 

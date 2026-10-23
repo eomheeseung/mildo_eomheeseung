@@ -16,13 +16,13 @@
 - MySQL 8.0 은 2026-07-31 에 RDS 표준 지원이 끝났고, 그 뒤에도 8.0 을 쓰면 **확장 지원 요금이 자동으로 붙습니다.**
   vCPU 시간당 누적이라 2 vCPU 기준 월 약 US$175(연 약 US$2,000)이고, 최신 메이저로 올리기 전까지 계속 나갑니다.
 
-![원인: 사용량 유형에 ExtendedSupport:MySQL8.0](images/rds-bluegreen/01_cause_extended_support.png)
+![원인: 사용량 유형에 ExtendedSupport:MySQL8.0](./images/rds-bluegreen/01_cause_extended_support.png)
 
 > 진단 포인트: 「RDS 요금이 갑자기 뛰었다」면 인스턴스·스토리지·백업 비용은 보통 고정이니, **사용량 유형별**로 쪼개 `ExtendedSupport` 항목부터 찾는다.
 
 8.0 → 8.4 는 중간 버전을 거치지 않고 바로 올릴 수 있습니다.
 
-![8.0.45 에서 8.4.x 로 직행 가능](images/rds-bluegreen/02_engine_version_8.4_available.png)
+![8.0.45 에서 8.4.x 로 직행 가능](./images/rds-bluegreen/02_engine_version_8.4_available.png)
 
 ---
 
@@ -67,9 +67,9 @@
 
 ⚠️ **엔진 유형을 Aurora MySQL 로 고르면 안 됩니다.** 일반 RDS 라서 **MySQL Community / 패밀리 `mysql8.4`** 여야 합니다. 이름이 비슷해 실제로 한 번 잘못 골랐습니다.
 
-![잘못된 예 — Aurora MySQL](images/rds-bluegreen/03_param_group_create_wrong_aurora.png)
+![잘못된 예 — Aurora MySQL](./images/rds-bluegreen/03_param_group_create_wrong_aurora.png)
 
-![올바른 예 — MySQL Community / mysql8.4](images/rds-bluegreen/04_param_group_create_mysql84.png)
+![올바른 예 — MySQL Community / mysql8.4](./images/rds-bluegreen/04_param_group_create_mysql84.png)
 
 ### 4-2. 운영에서 바꿔 둔 파라미터만 옮기기
 
@@ -79,7 +79,7 @@
 - **`lower_case_table_names` = 1** — 정적 파라미터. **블루와 반드시 같아야 하고**, 다르면(기본값 0) 전환이 깨집니다. 가장 중요합니다.
 - `time_zone` = Asia/Seoul
 
-![운영에서 바꿔 둔 파라미터 7개](images/rds-bluegreen/05_custom_params_7.png)
+![운영에서 바꿔 둔 파라미터 7개](./images/rds-bluegreen/05_custom_params_7.png)
 
 `mysql_native_password` 는 건드리지 않습니다(ON·수정 불가 고정). 나머지는 전부 기본값입니다.
 
@@ -87,28 +87,28 @@
 
 운영 인스턴스에서 **작업 → 블루/그린 배포 생성**.
 
-![작업 메뉴 → 블루/그린 배포 생성](images/rds-bluegreen/06_actions_create_bluegreen.png)
+![작업 메뉴 → 블루/그린 배포 생성](./images/rds-bluegreen/06_actions_create_bluegreen.png)
 
 그린 쪽만 지정합니다.
 - 엔진 버전: **MySQL 8.4.11**
 - DB 파라미터 그룹: **4-1 에서 만든 커스텀 그룹**. 화면은 처음에 `default.mysql8.4` 가 골라져 있습니다(아래 스크린샷이 그 상태). **그대로 두면 `lower_case_table_names` 가 0 이 되어 전환이 깨지므로 반드시 바꿉니다.**
 - 인스턴스 클래스·스토리지: 블루와 동일. 「최적화된 쓰기」「스토리지 파일 시스템 업그레이드」는 해제 — 바뀌는 변수를 엔진 버전 하나로 줄이기 위해서입니다.
 
-![블루/그린 생성 화면 — 파라미터 그룹은 기본값에서 커스텀으로 바꿔야 한다](images/rds-bluegreen/07_bluegreen_create_config.png)
+![블루/그린 생성 화면 — 파라미터 그룹은 기본값에서 커스텀으로 바꿔야 한다](./images/rds-bluegreen/07_bluegreen_create_config.png)
 
 검토 화면에서 바뀌는 항목이 **엔진 버전과 파라미터 그룹 두 가지뿐인지** 확인합니다.
 
-![검토 — 블루·그린 구성 비교](images/rds-bluegreen/08_bluegreen_review.png)
+![검토 — 블루·그린 구성 비교](./images/rds-bluegreen/08_bluegreen_review.png)
 
 생성을 누르면 그린 생성 → 블루의 읽기 전용 복제본으로 연결 → 엔진 8.4 업그레이드 → 백업 구성이 자동으로 진행됩니다. **이 동안 다운타임은 없습니다.**
 
-![생성 완료 — 5단계 모두 성공](images/rds-bluegreen/09_create_success_steps.png)
+![생성 완료 — 5단계 모두 성공](./images/rds-bluegreen/09_create_success_steps.png)
 
 ### 4-4. 그린이 블루와 같은지 확인
 
 연결·보안 탭에서 보안 그룹·VPC·서브넷·포트가 블루에서 그대로 상속됐는지 봅니다. 콘솔이 「다른 설정」으로 알려 주는 것은 **엔진 버전 하나뿐**이었습니다.
 
-![블루와 다른 건 엔진 버전뿐](images/rds-bluegreen/10_bluegreen_diff_engine_only.png)
+![블루와 다른 건 엔진 버전뿐](./images/rds-bluegreen/10_bluegreen_diff_engine_only.png)
 
 IAM 역할만은 그린으로 복사되지 않습니다. 이 서비스는 IAM DB 인증을 쓰지 않아 영향이 없었습니다.
 
@@ -125,11 +125,11 @@ WAS 에 mysql 클라이언트가 없어도 JRE 만 있으면 되고, 운영 애�
 
 배포 항목 선택 → **작업 → 전환**. 제한 시간은 기본 5분 그대로 — 이 안에 못 끝나면 전환하지 않고 원래대로 돌아가는 안전장치입니다.
 
-![전환 확인 화면](images/rds-bluegreen/11_switchover_confirm.png)
+![전환 확인 화면](./images/rds-bluegreen/11_switchover_confirm.png)
 
 전환은 블루 쓰기를 잠깐 막고, 그린이 따라잡으면 그린을 운영으로 올립니다. **엔드포인트는 그대로이고 그린을 가리키게 바뀝니다.** 약 1분 걸렸습니다.
 
-![전환 진행 중](images/rds-bluegreen/12_switchover_in_progress.png)
+![전환 진행 중](./images/rds-bluegreen/12_switchover_in_progress.png)
 
 전환 뒤 운영 엔드포인트로 접속해 버전이 8.4.11 인지 다시 확인했습니다.
 

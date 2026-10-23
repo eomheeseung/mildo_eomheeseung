@@ -45,7 +45,7 @@ import org.springframework.security.web.SecurityFilterChain;
  *
  * <p>검증은 열려야 할 곳과 닫혀야 할 곳을 둘 다 봤다 — 127.0.0.1:8091 은 200,
  * 서비스 포트의 actuator 는 401, 서버의 외부 주소로 8091 은 연결 자체가 안 된다.
- * 전체 구성은 {@code docs/monitoring-infra.md} §8.</p>
+ * 전체 구성은 {@code docs/ops/monitoring-infra.md} §8.</p>
  */
 @Configuration
 @RequiredArgsConstructor

@@ -1,6 +1,6 @@
 package mildo.persona.service;
 
-// 발췌: 리포트 호칭 자리표시 채우기. 설명: docs/engineering-decisions.md §22
+// 발췌: 리포트 호칭 자리표시 채우기. 설명: docs/design/engineering-decisions.md §22
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;

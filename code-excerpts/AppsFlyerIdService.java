@@ -15,7 +15,7 @@ import java.time.LocalDateTime;
 
 /**
  * 디바이스 광고 식별자(AppsFlyer ID) 등록 + <b>늦게 들어온 회원의 가입 전환 보내기</b>.
- * 설명: docs/troubleshooting.md §25
+ * 설명: docs/ops/troubleshooting.md §25
  *
  * <p><b>문제.</b> 가입 전환({@code af_complete_registration})은 가입이 끝나는 순간(페르소나 생성) 서버가
  * 광고 측정 서비스로 보낸다(S2S). 보낼 대상 기기를 이 식별자로 지정하는데, 그 순간 식별자가 없으면
