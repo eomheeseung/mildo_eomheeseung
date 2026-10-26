@@ -18,9 +18,11 @@ DB 스키마 설계, 결제/재화 시스템, 본인인증·회원가입 게이�
 - **광고비 파이프라인** — Google Ads · TikTok 실연동, 일 배치로 ROAS·순이익 집계
 - **관리자 대시보드** — 유저·매칭·신고·분석(시계열·퍼널)·매출·광고비
 - **커뮤니티 피드** — 게시물 · 2단계 댓글 · 좋아요 · 신고, 상태 기반 노출 제어(soft delete)
-- **알림** — FCM/Expo 푸시 7종 카테고리 수신 동의 + 야간 광고 차단(정보통신망법), **앱 아이콘 배지**(알림함 미읽음 수를 푸시에 실어 전송), AI 대화 호감도 채점
+- **알림** — FCM/Expo 푸시 7종 카테고리 수신 동의 + 야간 광고 차단(정보통신망법), **앱 아이콘 배지**(알림함 미읽음 수를 푸시에 실어 전송), **프로필 조회 알림 2시간 묶음**(조건부 UPDATE 로 자격 차지), AI 대화 호감도 채점
 - **실시간 공개 채팅(밀도톡)** — WebSocket(STOMP), 입장·@멘션 푸시
-- **추천** — 홈·탐색·테마·가치관(밸런스 게임) 6개 화면, 노출 기록 기반 회전 · 숨김/신고 양방향 제외
+- **추천** — 홈·탐색·테마·가치관(밸런스 게임) 6개 화면, 노출 기록 기반 회전 · 숨김/신고 양방향 제외 · **응답 없는 휴면 회원은 모자랄 때만 채움**(신청 24시간 응답률 11.3% → 25.9%) · 가치관 「같은 선택」은 일치율 60% 기준
+- **랜덤TALK** — 랜덤 이성 회원의 AI 페르소나와 대화하고 5왕복 뒤 매칭 신청. 하루 횟수·열린 방 상한·베리 과금, 선 넘기 판정은 응답 끝 마커로(출시 1주: 말을 건 방의 73% 가 5왕복 도달)
+- **실험 틀** — 실험 키별 50:50 배정·확정값(`forced_variant`) 한 칸으로 종료. 신규 홈 A/B 는 효과가 없어 기존 방식으로 확정
 - **비동기 가입** — AI 페르소나 생성(수십 초)을 요청에서 떼어내 `202 + 상태 조회`로 전환
 - **프로필 사진 AI 검수·채점** — 업로드 비동기 채점 + 주기 보정, 탈퇴 시 익명 이관
 - **운영 모니터링·알림** — 사무실 PC 한 대에 Grafana·Loki·Prometheus·Uptime Kuma, 운영 서버는 사설망으로 push. 알림은 운영 서버 안(앱이 살아 있을 때 보이는 것)과 밖(서버가 죽어야 보이는 것)으로 나눠 GPT 설명을 붙인 메일로
@@ -209,7 +211,10 @@ Google Ads·TikTok 광고비를 매일 당겨와 베리 매출과 합쳐 **ROAS�
 
 문서: [`docs/ops/troubleshooting.md`](./docs/ops/troubleshooting.md)
 
-실서비스를 운영하며 진단·해결한 사례 27건을 정리했습니다. 예시:
+실서비스를 운영하며 진단·해결한 사례 32건을 정리했습니다. 예시:
+- **홈이 가끔 5초 넘게 멈춤** — 카드 한 줄을 위해 후보 수백 명의 페르소나 JSON 9칸(평균 10.8KB)을 통째로 읽고 있었음. 쓰는 칸만 조회해 데이터 −89%, 운영 5초 초과 하루 26.7 → 15~18건
+- **카카오 무응답에 로그인이 30초 뒤 500** — 공용 `RestTemplate` 대기 무제한 + 트랜잭션 안 외부 호출. 연결 3초·응답 10초, 광고 수집 배치도 「조회는 밖, 저장만 짧게」로 분리
+- **보낸 말이 AI 입력에 두 번** — `IDENTITY` 키는 `save()` 순간 INSERT 되어 같은 트랜잭션의 조회가 방금 저장한 메시지를 읽음(AI 에이전트 파이프라인이 찾아 고친 건)
 - **공지를 읽었는데 50초 동안 "읽음"이 안 됨** — 읽음 기록 INSERT 가 FK 검사로 공지 행에 공유 잠금을 걸었고, 같은 요청의 `REQUIRES_NEW` 조회수 UPDATE 가 그 잠금을 기다림. 바깥을 붙잡은 건 애플리케이션 스레드라 DB 교착 탐지가 못 잡고 50초 타임아웃까지 멈춤. 조회수를 `afterCommit` 으로 미뤄 해결
 - **가입 전환이 한 회원에게 여러 번 나감** — "식별자는 회원당 한 번 채워진다"는 전제를, 다른 요청의 **전 칼럼 UPDATE** 가 식별자를 null 로 되돌리며 깨뜨림. `@DynamicUpdate` + 전용 칼럼 조건부 UPDATE 로 발송 자격을 차지
 - **가입 요청이 끊기고 재시도는 409** — AI 페르소나 생성을 42초 동기 대기, 앱이 31초 전에 끊은 요청이 83%. 빠르게 만드는 대신 **`202 + 상태 조회` 비동기 가입**으로 전환하고, 커밋 전 `@Async` 발사·자기호출·재시도 중복 실행 경계를 하나씩 막음
@@ -235,14 +240,14 @@ Google Ads·TikTok 광고비를 매일 당겨와 베리 매출과 합쳐 **ROAS�
 
 **설계** — `docs/design/`
 - [`docs/design/architecture.md`](./docs/design/architecture.md) — 시스템/도메인 구조
-- [`docs/design/engineering-decisions.md`](./docs/design/engineering-decisions.md) — **왜 그렇게 했나** (JDK 21·HTTP·트랜잭션·코딩 정책)
+- [`docs/design/engineering-decisions.md`](./docs/design/engineering-decisions.md) — **왜 그렇게 했나** (JDK 21·HTTP·트랜잭션·코딩 정책, 휴면 후보 제외·조회 알림 묶음·진 A/B 실험·일치율 배지)
 - [`docs/design/data-model.md`](./docs/design/data-model.md) — 데이터 모델(ERD)
 - [`docs/design/flows.md`](./docs/design/flows.md) — 주요 플로우(결제·가입 시퀀스)
 - [`docs/design/berry-ledger.md`](./docs/design/berry-ledger.md) — 베리 원장 설계 상세
 - [`docs/design/ad-spend.md`](./docs/design/ad-spend.md) — 광고비 연동 설계
 
 **운영·인프라** — `docs/ops/`
-- [`docs/ops/troubleshooting.md`](./docs/ops/troubleshooting.md) — 실운영 트러블슈팅 27건
+- [`docs/ops/troubleshooting.md`](./docs/ops/troubleshooting.md) — 실운영 트러블슈팅 32건
 - [`docs/ops/pitfalls.md`](./docs/ops/pitfalls.md) — **실제로 밟은 함정** (프록시·플러시 시점·전 칼럼 UPDATE·락·ThreadLocal·`@Async`와 커밋 순서·`REQUIRES_NEW` 와 바깥 잠금·설정 변경의 영향 범위·지표 오염)
 - [`docs/ops/monitoring-infra.md`](./docs/ops/monitoring-infra.md) — **운영 모니터링 구축기** (사무실 PC 한 대 + Tailscale 사설망 + Grafana·Loki·Prometheus·Uptime Kuma, 수집기 push 구조, Spring 지표를 관리 포트로 분리, 밟은 함정 13가지, 스크린샷 포함)
 - [`docs/ops/shared-db-neighbor-query.md`](./docs/ops/shared-db-neighbor-query.md) — **공용 DB 이웃 서비스의 DELETE 분석** (우리 서비스 코드가 아닌 이웃 서비스 배치가 백업 잠금을 거쳐 공용 DB 쓰기를 멈춘 사례. 범위 조건 + LIMIT 에서 옵티마이저가 엉뚱한 인덱스를 고른 원리, 복합 인덱스를 `=` 로 타게 바꾼 수정안, 운영·로컬 재현 전후 측정)
