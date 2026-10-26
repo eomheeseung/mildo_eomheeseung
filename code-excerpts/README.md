@@ -8,7 +8,7 @@
 | `env.ts` | 하나의 코드베이스로 웹(도메인 자동 추종)+네이티브(빌드 값) 지원. 폴백은 항상 운영(fail-safe) |
 | `validate-release-env.cjs` | 릴리즈 빌드에 로컬/사설 API_URL이 박히면 **빌드 자체를 실패**시키는 가드 |
 | `signupFlow.ts` | 서버 응답 기반 가입 라우팅 + 계정 생성 전 상태 보존(pending) + deploy-order-safe |
-| `apiClient.ts` | 401 자동 리프레시-재시도 인터셉터 + `{success,data,message}` 통일 envelope |
+| `apiClient.ts` | 401 자동 리프레시-재시도 인터셉터(갱신은 동시에 하나만 — single-flight) + `{success,data,message}` 통일 envelope |
 | `analytics.ts` | 리퍼럴 deferred 딥링크 **이중 캡처**(AppsFlyer UDL + expo-linking 백업) |
 | `RevenueReportTab.tsx` | 관리자 대시보드 — graceful degradation, 표시 반올림 vs 서버 정밀계산 분리 |
 | `platformUtils.ts` | 크로스플랫폼 UX — OS 분기 다운로드 + 보안컨텍스트 클립보드 폴백 |

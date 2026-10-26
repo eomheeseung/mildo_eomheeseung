@@ -7,6 +7,8 @@
 //  · 요청 인터셉터: 공개 API(로그인/회원가입 등)엔 토큰을 붙이지 않는다.
 //  · 응답 인터셉터: 401이면 refresh로 토큰 갱신 후 "원래 요청을 그대로 1회 재시도" → 화면 로직은
 //    토큰 만료를 신경 쓸 필요가 없다. 갱신도 실패하면 토큰을 비워 로그인 화면으로 흐르게 한다.
+//  · 갱신은 동시에 하나만(single-flight): 기동 때 병렬 요청이 같이 401을 받아도 /auth/refresh 는 한 번.
+//    리프레시 토큰을 회전시키는 서버에서 갱신이 겹치면, 늦게 끝난 쪽이 「만료」로 판정돼 로그아웃까지 간다.
 import axios, { AxiosError, AxiosInstance } from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { API_BASE_URL } from '../config/env';
@@ -29,6 +31,8 @@ class ApiClient {
         config.url?.includes('/auth/signup') ||
         config.url?.includes('/public/');
       if (!isPublic) {
+        // 갱신 중이면 끝날 때까지 기다렸다가 새 토큰을 붙인다(낡은 토큰으로 나가 401 을 또 받지 않게)
+        if (this.refreshInFlight) await this.refreshInFlight.catch(() => null);
         const token = await AsyncStorage.getItem('access_token');
         if (token) config.headers.Authorization = `Bearer ${token}`;
       }
@@ -39,14 +43,23 @@ class ApiClient {
     this.client.interceptors.response.use(
       (res) => res,
       async (error: AxiosError) => {
-        if (error.response?.status === 401) {
+        const cfg = error.config as (typeof error.config & { _retried?: boolean }) | undefined;
+        if (error.response?.status === 401 && cfg && !cfg._retried) {
+          // 이 요청이 나간 뒤 다른 요청이 이미 갱신을 끝냈으면(토큰이 바뀌었으면) 새 토큰으로 재시도만
+          const current = await AsyncStorage.getItem('access_token');
+          if (current && cfg.headers.Authorization !== `Bearer ${current}`) {
+            cfg._retried = true;
+            cfg.headers.Authorization = `Bearer ${current}`;
+            return this.client.request(cfg);
+          }
           const refreshToken = await AsyncStorage.getItem('refresh_token');
           if (refreshToken) {
             try {
-              const refreshed = await this.refreshToken(refreshToken);
-              if (refreshed && error.config) {
-                error.config.headers.Authorization = `Bearer ${refreshed.accessToken}`;
-                return this.client.request(error.config); // 갱신된 토큰으로 원요청 그대로 재시도
+              const refreshed = await this.refreshOnce(refreshToken);
+              if (refreshed) {
+                cfg._retried = true; // 재시도는 딱 한 번(무한 루프 방지)
+                cfg.headers.Authorization = `Bearer ${refreshed.accessToken}`;
+                return this.client.request(cfg); // 갱신된 토큰으로 원요청 그대로 재시도
               }
               await this.clearTokens(); // 갱신 실패 → 세션 종료
             } catch {
@@ -57,6 +70,18 @@ class ApiClient {
         return Promise.reject(error);
       },
     );
+  }
+
+  // 진행 중인 갱신 — 동시에 401 을 받은 요청들은 각자 갱신하지 않고 이 하나를 기다린다
+  private refreshInFlight: Promise<{ accessToken: string; refreshToken: string } | null> | null = null;
+
+  private refreshOnce(refreshToken: string) {
+    if (!this.refreshInFlight) {
+      this.refreshInFlight = this.refreshToken(refreshToken).finally(() => {
+        this.refreshInFlight = null;
+      });
+    }
+    return this.refreshInFlight;
   }
 
   // refresh는 인터셉터를 안 타는 별도 axios로 호출(무한 루프 방지)
