@@ -29,6 +29,8 @@
 
 ## 2. 친구 초대(리퍼럴) — 딥링크 → 귀속 → 보상
 
+> 2026-11, 운영에서 쓰인 적이 없어 앱에서 기능을 제거했습니다. 아래는 설계 기록입니다(→ [결정 19](./engineering-decisions.md)).
+
 ```
 초대자 A: 마이페이지 '친구 초대하기'
    → generateReferralLink(A.id)  =  <ONELINK>?inviter=A.id  공유
