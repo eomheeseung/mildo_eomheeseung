@@ -20,7 +20,7 @@
 | 파일 | 무엇을 보나 |
 |---|---|
 | `NiceIdentityGuard.java` | NICE 본인인증 **1인 1계정** 가드 (CI 유니크 + 살아있는 계정 중복 거부 / 탈퇴 계정 승계) |
-| `ReferralService.java` | 친구 초대 — 3중 어뷰징 방지, 가입과 분리된 처리 |
+| `ReferralService.java` | 친구 초대 — 3중 어뷰징 방지, 가입과 분리된 처리 (2026-11 실사용 0건으로 기능을 끔 — 끄는 방식은 결정 §31) |
 | `ExploreCandidateFilter.java` | 탐색 후보 필터 — 스킵/신고(양방향 차단)/기매칭/요청중 제외 |
 | `MbtiCompatibilityUtil.java` | 페르소나/MBTI 궁합 점수 계산 — 매칭·추천의 도메인 규칙 |
 | `FeedComment.java` | 커뮤니티 댓글 엔티티 — 2단계 고정, **상태 보존(soft delete)**, 카운터 컬럼 대신 원본 집계 |
@@ -38,6 +38,8 @@
 | `AffinityScoring.java` | LLM 대화 채점 — 구조화 출력/마커 이중 경로, 깨진 마커 방어(실측 기반), EMA 누적 |
 | `NoticeViewCount.java` | 공지 읽음 + 조회수 — `REQUIRES_NEW` 가 **바깥 트랜잭션의 FK 공유 잠금**을 기다려 50초 멈추던 것을 `afterCommit` 으로 미룸. DB 교착 탐지가 못 잡는 이유 |
 | `ReportNickname.java` | AI 리포트 호칭 — 문장엔 **`{닉네임}` 자리표시**만 저장, 응답 조립 때 현재 닉네임으로 채움(중첩 맵 사본, 빈 닉네임은 다른 개인정보로 대신하지 않음) |
+| `AiDateScore.java` | 페르소나 소개팅 궁합 점수 — **AI 자기 채점이 80~99 로 몰려** 점수를 두 페르소나 4축 차이로 코드가 냄(차이 ×2 로 벌림, 경계값은 300×300 쌍 실측), AI 에겐 숫자 없이 축별 방향만 |
+| `AiDateCompletion.java` | AI 생성(수십 초)은 트랜잭션 밖, **차감+저장 한 트랜잭션 · 실패 기록은 밖에서 `REQUIRES_NEW`**(rollback-only 함정), 결과 뒤 과금·실패 미차감, 기다리는 사이 차단되면 조용히 종료, 끝나지 못한 건 10분 뒤 실패 처리 |
 
 ## 외부 연동
 
