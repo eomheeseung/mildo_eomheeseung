@@ -22,6 +22,8 @@
 | `NiceIdentityGuard.java` | NICE 본인인증 **1인 1계정** 가드 (CI 유니크 + 살아있는 계정 중복 거부 / 탈퇴 계정 승계) |
 | `ReferralService.java` | 친구 초대 — 3중 어뷰징 방지, 가입과 분리된 처리 (2026-11 실사용 0건으로 기능을 끔 — 끄는 방식은 결정 §31) |
 | `ExploreCandidateFilter.java` | 탐색 후보 필터 — 스킵/신고(양방향 차단)/기매칭/요청중 제외 |
+| `AcquaintanceMatch.java` | 지인 차단 — 번호를 **한 형식으로 맞춘 뒤 HMAC 대조값**으로 비교(가입 경로마다 다른 암호문 문제), 내가 등록한 번호·내 번호를 등록한 사람 **양방향** 판정, 묶음 등록은 `INSERT IGNORE`(rollback-only 회피), 회원 여부 비노출 |
+| `AgeGapFill.java` | 나이 차 필터 — ±5살, 10명 미만이면 **나이가 가까운 순으로 ±10까지만** 채움, 모르면 남김, 휴면 채움보다 먼저 |
 | `MbtiCompatibilityUtil.java` | 페르소나/MBTI 궁합 점수 계산 — 매칭·추천의 도메인 규칙 |
 | `FeedComment.java` | 커뮤니티 댓글 엔티티 — 2단계 고정, **상태 보존(soft delete)**, 카운터 컬럼 대신 원본 집계 |
 | `AttendanceStreakService.java` | 연속 출석 — **매번 세는 방식이 상한에서 얼어붙던 것**을 상태 저장으로 전환, `% 7`을 저장하지 않는 이유 |
